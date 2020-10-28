@@ -6,8 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef CROCODDYL_CORE_COSTS_COST_SUM_HPP_
-#define CROCODDYL_CORE_COSTS_COST_SUM_HPP_
+#ifndef CROCODDYL_CORE_CONSTRAINTS_CONSTRAINT_MANAGER_HPP_
+#define CROCODDYL_CORE_CONSTRAINTS_CONSTRAINT_MANAGER_HPP_
 
 #include <string>
 #include <map>
@@ -356,4 +356,4 @@ struct ConstraintDataManagerTpl {
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/core/constraints/constraint-manager.hxx"
 
-#endif  // CROCODDYL_CORE_COSTS_COST_SUM_HPP_
+#endif  // CROCODDYL_CORE_CONSTRAINTS_CONSTRAINT_MANAGER_HPP_
