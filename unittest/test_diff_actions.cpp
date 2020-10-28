@@ -137,6 +137,10 @@ void test_partial_derivatives_against_numdiff(DifferentialActionModelTypes::Type
     BOOST_CHECK((data_num_diff->Lxu).isMuchSmallerThan(1.0, tol));
     BOOST_CHECK((data_num_diff->Luu).isMuchSmallerThan(1.0, tol));
   }
+  BOOST_CHECK((data->Hx - data_num_diff->Hx).isMuchSmallerThan(1.0, tol));
+  BOOST_CHECK((data->Hu - data_num_diff->Hu).isMuchSmallerThan(1.0, tol));
+  BOOST_CHECK((data->Gx - data_num_diff->Gx).isMuchSmallerThan(1.0, tol));
+  BOOST_CHECK((data->Gu - data_num_diff->Gu).isMuchSmallerThan(1.0, tol));
 }
 
 //----------------------------------------------------------------------------//
