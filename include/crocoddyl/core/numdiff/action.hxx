@@ -34,8 +34,10 @@ void ActionModelNumDiffTpl<Scalar>::calc(const boost::shared_ptr<ActionDataAbstr
   }
   boost::shared_ptr<Data> data_nd = boost::static_pointer_cast<Data>(data);
   model_->calc(data_nd->data_0, x, u);
-  data->cost = data_nd->data_0->cost;
   data->xnext = data_nd->data_0->xnext;
+  data->cost = data_nd->data_0->cost;
+  data_nd->g = data_nd->data_0->g;
+  data_nd->h = data_nd->data_0->h;
 }
 
 template <typename Scalar>
@@ -56,6 +58,8 @@ void ActionModelNumDiffTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionDataA
   const Scalar& c0 = data_nd->data_0->cost;
   data->xnext = data_nd->data_0->xnext;
   data->cost = data_nd->data_0->cost;
+  const VectorXs& g0 = data_nd->g;
+  const VectorXs& h0 = data_nd->h;
 
   assertStableStateFD(x);
 
@@ -65,15 +69,18 @@ void ActionModelNumDiffTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionDataA
     data_nd->dx(ix) = disturbance_;
     model_->get_state()->integrate(x, data_nd->dx, data_nd->xp);
     model_->calc(data_nd->data_x[ix], data_nd->xp, u);
-
+    // dynamics
     const VectorXs& xn = data_nd->data_x[ix]->xnext;
     const Scalar& c = data_nd->data_x[ix]->cost;
     model_->get_state()->diff(xn0, xn, data_nd->Fx.col(ix));
-
+    // cost
     data->Lx(ix) = (c - c0) / disturbance_;
     if (get_with_gauss_approx() > 0) {
       data_nd->Rx.col(ix) = (data_nd->data_x[ix]->r - data_nd->data_0->r) / disturbance_;
     }
+    // constraint
+    data_nd->Gx.col(ix) = (data_nd->data_x[ix]->g - g0) / disturbance_;
+    data_nd->Hx.col(ix) = (data_nd->data_x[ix]->h - h0) / disturbance_;
     data_nd->dx(ix) = 0.0;
   }
   data->Fx /= disturbance_;
@@ -83,15 +90,18 @@ void ActionModelNumDiffTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionDataA
   for (unsigned iu = 0; iu < model_->get_nu(); ++iu) {
     data_nd->du(iu) = disturbance_;
     model_->calc(data_nd->data_u[iu], x, u + data_nd->du);
-
+    // dynamics
     const VectorXs& xn = data_nd->data_u[iu]->xnext;
     const Scalar& c = data_nd->data_u[iu]->cost;
     model_->get_state()->diff(xn0, xn, data_nd->Fu.col(iu));
-
+    // cost
     data->Lu(iu) = (c - c0) / disturbance_;
     if (get_with_gauss_approx() > 0) {
       data_nd->Ru.col(iu) = (data_nd->data_u[iu]->r - data_nd->data_0->r) / disturbance_;
     }
+    // constraint
+    data_nd->Gu.col(iu) = (data_nd->data_u[iu]->g - g0) / disturbance_;
+    data_nd->Hu.col(iu) = (data_nd->data_u[iu]->h - h0) / disturbance_;
     data_nd->du(iu) = 0.0;
   }
   data->Fu /= disturbance_;
