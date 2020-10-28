@@ -12,6 +12,7 @@
 #include "state.hpp"
 #include "actuation.hpp"
 #include "cost.hpp"
+#include "constraint.hpp"
 #include "contact.hpp"
 #include "crocoddyl/core/diff-action-base.hpp"
 #include "crocoddyl/core/numdiff/diff-action.hpp"
