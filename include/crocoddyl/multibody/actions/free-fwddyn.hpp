@@ -105,7 +105,7 @@ struct DifferentialActionDataFreeFwdDynamicsTpl : public DifferentialActionDataA
         dtau_dx(model->get_nu(), model->get_state()->get_ndx()),
         tmp_xstatic(model->get_state()->get_nx()) {
     costs->shareMemory(this);
-    if (model->get_constraints() == nullptr) {
+    if (model->get_constraints() != nullptr) {
       constraints = model->get_constraints()->createData(&multibody);
       constraints->shareMemory(this);
     }
