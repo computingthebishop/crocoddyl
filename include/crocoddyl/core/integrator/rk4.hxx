@@ -87,6 +87,9 @@ void IntegratedActionModelRK4Tpl<Scalar>::calc(const boost::shared_ptr<ActionDat
   if (with_cost_residual_) {
     d->r = d->differential[0]->r;
   }
+  // TODO(cmastalli): share the memory with the differential constraint datas
+  d->g = d->differential[0]->g;
+  d->h = d->differential[0]->h;
 }
 
 template <typename Scalar>
@@ -180,6 +183,11 @@ void IntegratedActionModelRK4Tpl<Scalar>::calcDiff(const boost::shared_ptr<Actio
     d->Lxu = d->differential[0]->Lxu;
     d->Luu = d->differential[0]->Luu;
   }
+  // TODO(cmastalli): share the memory with the differential constraint datas
+  d->Gx = d->differential[0]->Gx;
+  d->Gu = d->differential[0]->Gu;
+  d->Hx = d->differential[0]->Hx;
+  d->Hu = d->differential[0]->Hu;
 }
 
 template <typename Scalar>
