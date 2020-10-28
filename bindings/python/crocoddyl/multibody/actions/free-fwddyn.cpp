@@ -22,11 +22,13 @@ void exposeDifferentialActionFreeFwdDynamics() {
       "include the armature, you need to use setArmature(). On the other hand, the\n"
       "stack of cost functions are implemented in CostModelSum().",
       bp::init<boost::shared_ptr<StateMultibody>, boost::shared_ptr<ActuationModelAbstract>,
-               boost::shared_ptr<CostModelSum> >(bp::args("self", "state", "actuation", "costs"),
-                                                 "Initialize the free forward-dynamics action model.\n\n"
-                                                 ":param state: multibody state\n"
-                                                 ":param actuation: abstract actuation model\n"
-                                                 ":param costs: stack of cost functions"))
+               boost::shared_ptr<CostModelSum>, bp::optional<boost::shared_ptr<ConstraintModelManager> > >(
+          bp::args("self", "state", "actuation", "costs", "constraints"),
+          "Initialize the free forward-dynamics action model.\n\n"
+          ":param state: multibody state\n"
+          ":param actuation: abstract actuation model\n"
+          ":param costs: stack of cost functions\n"
+          ":param constraints: stack of constraint functions"))
       .def<void (DifferentialActionModelFreeFwdDynamics::*)(const boost::shared_ptr<DifferentialActionDataAbstract>&,
                                                             const Eigen::Ref<const Eigen::VectorXd>&,
                                                             const Eigen::Ref<const Eigen::VectorXd>&)>(
@@ -70,6 +72,10 @@ void exposeDifferentialActionFreeFwdDynamics() {
                     bp::make_function(&DifferentialActionModelFreeFwdDynamics::get_costs,
                                       bp::return_value_policy<bp::return_by_value>()),
                     "total cost model")
+      .add_property("constraints",
+                    bp::make_function(&DifferentialActionModelFreeFwdDynamics::get_constraints,
+                                      bp::return_value_policy<bp::return_by_value>()),
+                    "entire constraint model")
       .add_property(
           "armature",
           bp::make_function(&DifferentialActionModelFreeFwdDynamics::get_armature, bp::return_internal_reference<>()),

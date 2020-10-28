@@ -24,10 +24,11 @@ namespace crocoddyl {
 template <typename Scalar>
 DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::DifferentialActionModelFreeFwdDynamicsTpl(
     boost::shared_ptr<StateMultibody> state, boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs)
+    boost::shared_ptr<CostModelSum> costs, boost::shared_ptr<ConstraintModelManager> constraints)
     : Base(state, actuation->get_nu(), costs->get_nr()),
       actuation_(actuation),
       costs_(costs),
+      constraints_(constraints),
       pinocchio_(*state->get_pinocchio().get()),
       with_armature_(true),
       armature_(VectorXs::Zero(state->get_nv())) {
@@ -180,6 +181,12 @@ template <typename Scalar>
 const boost::shared_ptr<CostModelSumTpl<Scalar> >& DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::get_costs()
     const {
   return costs_;
+}
+
+template <typename Scalar>
+const boost::shared_ptr<ConstraintModelManagerTpl<Scalar> >&
+DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::get_constraints() const {
+  return constraints_;
 }
 
 template <typename Scalar>

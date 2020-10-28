@@ -18,6 +18,7 @@
 #include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/core/diff-action-base.hpp"
 #include "crocoddyl/core/costs/cost-sum.hpp"
+#include "crocoddyl/core/constraints/constraint-manager.hpp"
 #include "crocoddyl/core/actuation-base.hpp"
 #include "crocoddyl/multibody/data/multibody.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
@@ -33,17 +34,19 @@ class DifferentialActionModelFreeFwdDynamicsTpl : public DifferentialActionModel
   typedef _Scalar Scalar;
   typedef DifferentialActionModelAbstractTpl<Scalar> Base;
   typedef DifferentialActionDataFreeFwdDynamicsTpl<Scalar> Data;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef CostModelSumTpl<Scalar> CostModelSum;
-  typedef StateMultibodyTpl<Scalar> StateMultibody;
-  typedef ActuationModelAbstractTpl<Scalar> ActuationModelAbstract;
   typedef DifferentialActionDataAbstractTpl<Scalar> DifferentialActionDataAbstract;
+  typedef StateMultibodyTpl<Scalar> StateMultibody;
+  typedef CostModelSumTpl<Scalar> CostModelSum;
+  typedef ConstraintModelManagerTpl<Scalar> ConstraintModelManager;
+  typedef ActuationModelAbstractTpl<Scalar> ActuationModelAbstract;
+  typedef MathBaseTpl<Scalar> MathBase;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
   DifferentialActionModelFreeFwdDynamicsTpl(boost::shared_ptr<StateMultibody> state,
                                             boost::shared_ptr<ActuationModelAbstract> actuation,
-                                            boost::shared_ptr<CostModelSum> costs);
+                                            boost::shared_ptr<CostModelSum> costs,
+                                            boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
   virtual ~DifferentialActionModelFreeFwdDynamicsTpl();
 
   virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
@@ -59,6 +62,7 @@ class DifferentialActionModelFreeFwdDynamicsTpl : public DifferentialActionModel
 
   const boost::shared_ptr<ActuationModelAbstract>& get_actuation() const;
   const boost::shared_ptr<CostModelSum>& get_costs() const;
+  const boost::shared_ptr<ConstraintModelManager>& get_constraints() const;
   pinocchio::ModelTpl<Scalar>& get_pinocchio() const;
   const VectorXs& get_armature() const;
   void set_armature(const VectorXs& armature);
@@ -75,6 +79,7 @@ class DifferentialActionModelFreeFwdDynamicsTpl : public DifferentialActionModel
  private:
   boost::shared_ptr<ActuationModelAbstract> actuation_;
   boost::shared_ptr<CostModelSum> costs_;
+  boost::shared_ptr<ConstraintModelManager> constraints_;
   pinocchio::ModelTpl<Scalar>& pinocchio_;
   bool with_armature_;
   VectorXs armature_;
@@ -100,6 +105,10 @@ struct DifferentialActionDataFreeFwdDynamicsTpl : public DifferentialActionDataA
         dtau_dx(model->get_nu(), model->get_state()->get_ndx()),
         tmp_xstatic(model->get_state()->get_nx()) {
     costs->shareMemory(this);
+    if (model->get_constraints() == nullptr) {
+      constraints = model->get_constraints()->createData(&multibody);
+      constraints->shareMemory(this);
+    }
     Minv.setZero();
     u_drift.setZero();
     dtau_dx.setZero();
@@ -109,6 +118,7 @@ struct DifferentialActionDataFreeFwdDynamicsTpl : public DifferentialActionDataA
   pinocchio::DataTpl<Scalar> pinocchio;
   DataCollectorActMultibodyTpl<Scalar> multibody;
   boost::shared_ptr<CostDataSumTpl<Scalar> > costs;
+  boost::shared_ptr<ConstraintDataManagerTpl<Scalar> > constraints;
   MatrixXs Minv;
   VectorXs u_drift;
   MatrixXs dtau_dx;
