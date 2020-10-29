@@ -38,6 +38,11 @@ DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::DifferentialActionModelFreeFw
   }
   Base::set_u_lb(Scalar(-1.) * pinocchio_.effortLimit.tail(nu_));
   Base::set_u_ub(Scalar(+1.) * pinocchio_.effortLimit.tail(nu_));
+
+  if (constraints_ != nullptr) {
+    ng_ = constraints_->get_ng();
+    nh_ = constraints_->get_nh();
+  }
 }
 
 template <typename Scalar>
@@ -79,6 +84,9 @@ void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::calc(
   // Computing the cost value and residuals
   costs_->calc(d->costs, x, u);
   d->cost = d->costs->cost;
+  if (constraints_ != nullptr) {
+    constraints_->calc(d->constraints, x, u);
+  }
 }
 
 template <typename Scalar>
@@ -118,6 +126,9 @@ void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::calcDiff(
 
   // Computing the cost derivatives
   costs_->calcDiff(d->costs, x, u);
+  if (constraints_ != nullptr) {
+    constraints_->calcDiff(d->constraints, x, u);
+  }
 }
 
 template <typename Scalar>
