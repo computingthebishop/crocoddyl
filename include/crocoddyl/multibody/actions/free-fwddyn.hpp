@@ -69,6 +69,8 @@ class DifferentialActionModelFreeFwdDynamicsTpl : public DifferentialActionModel
 
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control limits
+  using Base::ng_;                  //!< Number of inequality constraints
+  using Base::nh_;                  //!< Number of equality constraints
   using Base::nr_;                  //!< Dimension of the cost residual
   using Base::nu_;                  //!< Control dimension
   using Base::state_;               //!< Model of the state
