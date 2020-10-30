@@ -14,7 +14,6 @@
 #include "crocoddyl/multibody/states/multibody.hpp"
 #include "crocoddyl/multibody/data/multibody.hpp"
 #include "crocoddyl/multibody/frames.hpp"
-// #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
 
@@ -121,10 +120,6 @@ struct ConstraintDataFrameVelocityEqualityTpl : public ConstraintDataAbstractTpl
   typedef MathBaseTpl<Scalar> MathBase;
   typedef ConstraintDataAbstractTpl<Scalar> Base;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
-  typedef typename MathBase::VectorXs VectorXs;
-  typedef typename MathBase::MatrixXs MatrixXs;
-  typedef typename MathBase::Matrix6xs Matrix6xs;
-  typedef typename MathBase::Matrix6s Matrix6s;
   typedef typename MathBase::Vector6s Vector6s;
 
   template <template <typename Scalar> class Model>
