@@ -123,6 +123,12 @@ class SolverDDP : public SolverAbstract {
    */
   virtual void forwardPass(const double stepLength);
 
+  enum StoppingType { StopCriteriaQuNorm, StopCriteriaCostReduction };
+  virtual double stoppingCriteriaQuNorm();
+  virtual double stoppingCriteriaCostReduction();
+  virtual bool stoppingTest();
+  virtual bool stoppingTestFeasible();
+
   /**
    * @brief Compute the feedforward and feedback terms using a Cholesky decomposition
    *
@@ -292,13 +298,21 @@ class SolverDDP : public SolverAbstract {
    */
   void set_th_grad(const double th_grad);
 
+  /**
+   * @brief Modify the threshold for accepting a gap as non-zero
+   */
+  void set_th_gaptol(const double th_gaptol);
+
+  virtual void set_stoppingCriteria(SolverDDP::StoppingType stop_type);
+
  protected:
   double reg_incfactor_;  //!< Regularization factor used to increase the damping value
   double reg_decfactor_;  //!< Regularization factor used to decrease the damping value
   double reg_min_;        //!< Minimum allowed regularization value
   double reg_max_;        //!< Maximum allowed regularization value
 
-  double cost_try_;                      //!< Total cost computed by line-search procedure
+  double cost_try_;  //!< Total cost computed by line-search procedure
+  double cost_prev_;
   std::vector<Eigen::VectorXd> xs_try_;  //!< State trajectory computed by line-search procedure
   std::vector<Eigen::VectorXd> us_try_;  //!< Control trajectory computed by line-search procedure
   std::vector<Eigen::VectorXd> dx_;
@@ -321,11 +335,16 @@ class SolverDDP : public SolverAbstract {
       FuTVxx_p_;             //!< Store the values of \f$\mathbf{f_u}^T\mathbf{V_{xx}}^{'}\f$ per each running node
   Eigen::VectorXd fTVxx_p_;  //!< Store the value of \f$\mathbf{\bar{f}}^T\mathbf{V_{xx}}^{'}\f$
   std::vector<Eigen::LLT<Eigen::MatrixXd> > Quu_llt_;  //!< Cholesky LLT solver
-  std::vector<Eigen::VectorXd> Quuk_;  //!< Store the values of \f$\mathbf{Q_{uu}\mathbf{k}} per each running node
-  std::vector<double> alphas_;         //!< Set of step lengths using by the line-search procedure
-  double th_grad_;                     //!< Tolerance of the expected gradient used for testing the step
-  double th_stepdec_;                  //!< Step-length threshold used to decrease regularization
-  double th_stepinc_;                  //!< Step-length threshold used to increase regularization
+  std::vector<Eigen::VectorXd> Quuk_;                  //!< Quuk term
+  std::vector<double> alphas_;                         //!< Set of step lengths using by the line-search procedure
+  double th_grad_;     //!< Tolerance of the expected gradient used for testing the step
+  double th_gaptol_;   //!< Threshold limit to check non-zero gaps
+  double th_stepdec_;  //!< Step-length threshold used to decrease regularization
+  double th_stepinc_;  //!< Step-length threshold used to increase regularization
+  bool was_feasible_;  //!< Label that indicates in the previous iterate was feasible
+
+  std::function<double(void)> stopping_criteria_;
+  std::function<bool(void)> stopping_test_;
 };
 
 }  // namespace crocoddyl

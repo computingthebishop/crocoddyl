@@ -17,6 +17,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolverFDDP_computeDirections, SolverDDP::
 
 void exposeSolverFDDP() {
   bp::register_ptr_to_python<boost::shared_ptr<SolverFDDP> >();
+  bp::enum_<SolverFDDP::StoppingTestType>("StoppingTestType")
+      .value("StopTestFeasible", SolverFDDP::StopTestFeasible)
+      .value("StopTestGaps", SolverFDDP::StopTestGaps);
 
   bp::class_<SolverFDDP, bp::bases<SolverDDP> >(
       "SolverFDDP",
@@ -46,12 +49,17 @@ void exposeSolverFDDP() {
                ":param regInit: initial guess for the regularization value. Very low values are typical\n"
                "                used with very good guess points (init_xs, init_us) (default None).\n"
                ":returns the optimal trajectory xopt, uopt and a boolean that describes if convergence was reached."))
+      .def("setStoppingTest", &SolverFDDP::set_stoppingTest, bp::args("self, stopTestType"),
+           "Sets the stopping test that will be used by the solver.")
       .def("updateExpectedImprovement", &SolverFDDP::updateExpectedImprovement,
            bp::return_value_policy<bp::copy_const_reference>(), bp::args("self"),
            "Update the expected improvement model\n\n")
       .add_property("th_acceptNegStep", bp::make_function(&SolverFDDP::get_th_acceptnegstep),
                     bp::make_function(&SolverFDDP::set_th_acceptnegstep),
-                    "threshold for step acceptance in ascent direction");
+                    "threshold for step acceptance in ascent direction")
+      .add_property("th_stop_gaps", bp::make_function(&SolverFDDP::get_th_stop_gaps),
+                    bp::make_function(&SolverFDDP::set_th_stop_gaps),
+                    "threshold for stopping criteria considering gaps");
 }
 
 }  // namespace python
