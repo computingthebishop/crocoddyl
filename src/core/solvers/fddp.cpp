@@ -12,7 +12,7 @@
 namespace crocoddyl {
 
 SolverFDDP::SolverFDDP(boost::shared_ptr<ShootingProblem> problem)
-    : SolverDDP(problem), dg_(0), dq_(0), dv_(0), th_acceptnegstep_(2) {}
+    : SolverDDP(problem), dg_(0), dq_(0), dv_(0), th_stop_gaps_(1e-3), th_acceptnegstep_(2) {}
 
 SolverFDDP::~SolverFDDP() {}
 
@@ -65,6 +65,7 @@ bool SolverFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::v
         if (d_[0] < th_grad_ || dV_ > th_acceptstep_ * dVexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
+          cost_prev_ = cost_;
           cost_ = cost_try_;
           recalcDiff = true;
           break;
@@ -73,6 +74,7 @@ bool SolverFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::v
         if (dV_ > th_acceptnegstep_ * dVexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
+          cost_prev_ = cost_;
           cost_ = cost_try_;
           recalcDiff = true;
           break;
@@ -97,7 +99,23 @@ bool SolverFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::v
       callback(*this);
     }
 
-    if (was_feasible_ && stop_ < th_stop_) {
+    if (stoppingTest()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SolverFDDP::stoppingTestGaps() {
+  if (was_feasible_ && stop_ < th_stop_) {
+    return true;
+  } else if (!was_feasible_ && stop_ < th_stop_) {
+    stop_gaps_ = 0.;
+    const std::size_t& T = this->problem_->get_T();
+    for (std::size_t t = 0; t < T; ++t) {
+      stop_gaps_ += fs_[t].norm();
+    }
+    if (stop_gaps_ < th_stop_gaps_) {
       return true;
     }
   }
@@ -235,6 +253,30 @@ void SolverFDDP::set_th_acceptnegstep(const double& th_acceptnegstep) {
                  << "th_acceptnegstep value has to be positive.");
   }
   th_acceptnegstep_ = th_acceptnegstep;
+}
+
+double SolverFDDP::get_th_stop_gaps() const { return th_stop_gaps_; }
+
+void SolverFDDP::set_th_stop_gaps(const double& th_stop_gaps) {
+  if (0. > th_stop_gaps) {
+    throw_pretty("Invalid argument: "
+                 << "th_stop_gaps value has to be positive.");
+  }
+  th_stop_gaps_ = th_stop_gaps;
+}
+
+void SolverFDDP::set_stoppingTest(SolverFDDP::StoppingTestType stop_type) {
+  switch (stop_type) {
+    case SolverFDDP::StopTestFeasible:
+      stopping_test_ = std::bind(&SolverDDP::stoppingTestFeasible, this);
+      break;
+    case SolverFDDP::StopTestGaps:
+      stopping_test_ = std::bind(&SolverFDDP::stoppingTestGaps, this);
+      break;
+    default:
+      stopping_test_ = std::bind(&SolverDDP::stoppingTestFeasible, this);
+      break;
+  }
 }
 
 }  // namespace crocoddyl

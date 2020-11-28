@@ -91,10 +91,20 @@ class SolverFDDP : public SolverDDP {
    */
   void set_th_acceptnegstep(const double& th_acceptnegstep);
 
+  enum StoppingTestType { StopTestFeasible, StopTestGaps };
+  virtual bool stoppingTestGaps();
+  void set_stoppingTest(SolverFDDP::StoppingTestType stop_type);
+
+  double get_th_stop_gaps() const;
+  void set_th_stop_gaps(const double& th_stop_gaps);
+
  protected:
   double dg_;  //!< Internal data for computing the expected improvement
   double dq_;  //!< Internal data for computing the expected improvement
   double dv_;  //!< Internal data for computing the expected improvement
+
+  double th_stop_gaps_;
+  double stop_gaps_;
 
  private:
   double th_acceptnegstep_;  //!< Threshold used for accepting step along ascent direction

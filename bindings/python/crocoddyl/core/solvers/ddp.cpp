@@ -18,7 +18,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolverDDP_trySteps, SolverDDP::tryStep, 0
 
 void exposeSolverDDP() {
   bp::register_ptr_to_python<boost::shared_ptr<SolverDDP> >();
-
+  bp::enum_<SolverDDP::StoppingType>("StoppingType")
+      .value("StopCriteriaQuNorm", SolverDDP::StopCriteriaQuNorm)
+      .value("StopCriteriaCostReduction", SolverDDP::StopCriteriaCostReduction);
   bp::class_<SolverDDP, bp::bases<SolverAbstract> >(
       "SolverDDP",
       "DDP solver.\n\n"
@@ -63,6 +65,8 @@ void exposeSolverDDP() {
                               ":returns the cost improvement."))
       .def("stoppingCriteria", &SolverDDP::stoppingCriteria, bp::args("self"),
            "Return a sum of positive parameters whose sum quantifies the DDP termination.")
+      .def("setStoppingCriteria", &SolverDDP::set_stoppingCriteria, bp::args("self, stopType"),
+           "Sets the stopping criteria to be used by the solver.")
       .def("expectedImprovement", &SolverDDP::expectedImprovement, bp::return_value_policy<bp::copy_const_reference>(),
            bp::args("self"),
            "Return two scalars denoting the quadratic improvement model\n\n"

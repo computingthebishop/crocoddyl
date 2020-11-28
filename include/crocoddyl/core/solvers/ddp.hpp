@@ -120,6 +120,12 @@ class SolverDDP : public SolverAbstract {
    */
   virtual void forwardPass(const double& stepLength);
 
+  enum StoppingType { StopCriteriaQuNorm, StopCriteriaCostReduction };
+  virtual double stoppingCriteriaQuNorm();
+  virtual double stoppingCriteriaCostReduction();
+  virtual bool stoppingTest();
+  virtual bool stoppingTestFeasible();
+
   /**
    * @brief Compute the feedforward and feedback terms using a Cholesky decomposition
    *
@@ -280,12 +286,15 @@ class SolverDDP : public SolverAbstract {
    */
   void set_th_gaptol(const double& th_gaptol);
 
+  virtual void set_stoppingCriteria(SolverDDP::StoppingType stop_type);
+
  protected:
   double regfactor_;  //!< Regularization factor used to decrease / increase it
   double regmin_;     //!< Minimum allowed regularization value
   double regmax_;     //!< Maximum allowed regularization value
 
-  double cost_try_;                      //!< Total cost computed by line-search procedure
+  double cost_try_;  //!< Total cost computed by line-search procedure
+  double cost_prev_;
   std::vector<Eigen::VectorXd> xs_try_;  //!< State trajectory computed by line-search procedure
   std::vector<Eigen::VectorXd> us_try_;  //!< Control trajectory computed by line-search procedure
   std::vector<Eigen::VectorXd> dx_;
@@ -314,6 +323,9 @@ class SolverDDP : public SolverAbstract {
   double th_stepdec_;  //!< Step-length threshold used to decrease regularization
   double th_stepinc_;  //!< Step-length threshold used to increase regularization
   bool was_feasible_;  //!< Label that indicates in the previous iterate was feasible
+
+  std::function<double(void)> stopping_criteria_;
+  std::function<bool(void)> stopping_test_;
 };
 
 }  // namespace crocoddyl

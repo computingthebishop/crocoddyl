@@ -18,11 +18,14 @@ SolverDDP::SolverDDP(boost::shared_ptr<ShootingProblem> problem)
       regmin_(1e-9),
       regmax_(1e9),
       cost_try_(0.),
+      cost_prev_(0.),
       th_grad_(1e-12),
       th_gaptol_(1e-9),
       th_stepdec_(0.5),
       th_stepinc_(0.01),
       was_feasible_(false) {
+  stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaQuNorm, this);
+  stopping_test_ = std::bind(&SolverDDP::stoppingTestFeasible, this);
   allocateData();
 
   const std::size_t& n_alphas = 10;
@@ -111,7 +114,7 @@ bool SolverDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::ve
       callback(*this);
     }
 
-    if (was_feasible_ && stop_ < th_stop_) {
+    if (stoppingTest()) {
       return true;
     }
   }
@@ -130,18 +133,29 @@ double SolverDDP::tryStep(const double& steplength) {
   return cost_ - cost_try_;
 }
 
-double SolverDDP::stoppingCriteria() {
+double SolverDDP::stoppingCriteriaQuNorm() {
   stop_ = 0.;
   const std::size_t& T = this->problem_->get_T();
   const std::vector<boost::shared_ptr<ActionModelAbstract> >& models = problem_->get_runningModels();
   for (std::size_t t = 0; t < T; ++t) {
-    const std::size_t& nu = models[t]->get_nu();
-    if (nu != 0) {
-      stop_ += Qu_[t].head(nu).squaredNorm();
+    if (models[t]->get_nu() != 0) {
+      stop_ += Qu_[t].squaredNorm();
     }
   }
   return stop_;
 }
+
+double SolverDDP::stoppingCriteriaCostReduction() {
+  stop_ = 0.;
+  stop_ = std::abs(cost_ - cost_prev_) / cost_;
+  return stop_;
+}
+
+double SolverDDP::stoppingCriteria() { return stopping_criteria_(); }
+
+bool SolverDDP::stoppingTestFeasible() { return (was_feasible_ && stop_ < th_stop_); }
+
+bool SolverDDP::stoppingTest() { return stopping_test_(); }
 
 const Eigen::Vector2d& SolverDDP::expectedImprovement() {
   d_.fill(0);
@@ -512,6 +526,20 @@ void SolverDDP::set_th_gaptol(const double& th_gaptol) {
                  << "th_gaptol value has to be positive.");
   }
   th_gaptol_ = th_gaptol;
+}
+
+void SolverDDP::set_stoppingCriteria(SolverDDP::StoppingType stop_type) {
+  switch (stop_type) {
+    case SolverDDP::StopCriteriaQuNorm:
+      stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaQuNorm, this);
+      break;
+    case SolverDDP::StopCriteriaCostReduction:
+      stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaCostReduction, this);
+      break;
+    default:
+      stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaQuNorm, this);
+      break;
+  }
 }
 
 }  // namespace crocoddyl
