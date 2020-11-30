@@ -92,6 +92,7 @@ bool SolverDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::ve
         if (d_[0] < th_grad_ || !is_feasible_ || dV_ > th_acceptstep_ * dVexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, true);
+          cost_prev_ = cost_;
           cost_ = cost_try_;
           recalcDiff = true;
           break;
