@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,6 +112,16 @@ template <typename Scalar>
 struct CostDataStateTpl;
 
 template <typename Scalar>
+class CostModelControlGravTpl;
+template <typename Scalar>
+struct CostDataControlGravTpl;
+
+template <typename Scalar>
+class CostModelControlGravContactTpl;
+template <typename Scalar>
+struct CostDataControlGravContactTpl;
+
+template <typename Scalar>
 class CostModelFrameVelocityTpl;
 template <typename Scalar>
 struct CostDataFrameVelocityTpl;
@@ -196,6 +206,10 @@ class FrictionConeTpl;
 template <typename Scalar>
 class WrenchConeTpl;
 
+// cop support
+template <typename Scalar>
+class CoPSupportTpl;
+
 // state
 template <typename Scalar>
 class StateMultibodyTpl;
@@ -264,6 +278,7 @@ typedef ContactDataNumDiffTpl<double> ContactDataNumDiff;
 
 typedef FrictionConeTpl<double> FrictionCone;
 typedef WrenchConeTpl<double> WrenchCone;
+typedef CoPSupportTpl<double> CoPSupport;
 
 typedef FrameTranslationTpl<double> FrameTranslation;
 typedef FrameRotationTpl<double> FrameRotation;
@@ -286,6 +301,10 @@ typedef CostModelImpulseCoMTpl<double> CostModelImpulseCoM;
 typedef CostDataImpulseCoMTpl<double> CostDataImpulseCoM;
 typedef CostModelStateTpl<double> CostModelState;
 typedef CostDataStateTpl<double> CostDataState;
+typedef CostModelControlGravTpl<double> CostModelControlGrav;
+typedef CostDataControlGravTpl<double> CostDataControlGrav;
+typedef CostModelControlGravContactTpl<double> CostModelControlGravContact;
+typedef CostDataControlGravContactTpl<double> CostDataControlGravContact;
 typedef CostModelFrameVelocityTpl<double> CostModelFrameVelocity;
 typedef CostDataFrameVelocityTpl<double> CostDataFrameVelocity;
 typedef CostModelContactCoPPositionTpl<double> CostModelContactCoPPosition;
@@ -305,7 +324,6 @@ typedef CostModelImpulseCoPPositionTpl<double> CostModelImpulseCoPPosition;
 typedef CostDataImpulseCoPPositionTpl<double> CostDataImpulseCoPPosition;
 typedef CostModelImpulseWrenchConeTpl<double> CostModelImpulseWrenchCone;
 typedef CostDataImpulseWrenchConeTpl<double> CostDataImpulseWrenchCone;
-
 typedef CostDataFrameRotationTpl<double> CostDataFrameRotation;
 
 typedef ImpulseModelAbstractTpl<double> ImpulseModelAbstract;

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,6 +41,9 @@ class ActionModelUnicycleTpl : public ActionModelAbstractTpl<_Scalar> {
 
   const Vector2s& get_cost_weights() const;
   void set_cost_weights(const Vector2s& weights);
+
+  Scalar get_dt() const;
+  void set_dt(const Scalar dt);
 
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control limits

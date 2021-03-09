@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
   boost::shared_ptr<crocoddyl::ActivationModelAbstract> activation;
   Eigen::VectorXd lb = Eigen::VectorXd::Random(nr);
   Eigen::VectorXd ub = lb + Eigen::VectorXd::Ones(nr) + Eigen::VectorXd::Random(nr);
-  Eigen::VectorXd weights = 0.1 * Eigen::VectorXd::Random(nr);
+  Eigen::VectorXd weights = 1. * Eigen::VectorXd::Random(nr);
   double alpha = fabs(Eigen::VectorXd::Random(1)[0]);
   double eps = fabs(Eigen::VectorXd::Random(1)[0]);
 

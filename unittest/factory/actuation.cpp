@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, University of Edinburgh
+// Copyright (C) 2019-2021, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,13 +71,12 @@ boost::shared_ptr<crocoddyl::ActuationModelAbstract> ActuationModelFactory::crea
       break;
     case ActuationModelTypes::ActuationModelMultiCopterBase:
       state_multibody = boost::static_pointer_cast<crocoddyl::StateMultibody>(state);
-      n_rotors = 4;
-      tau_f = Eigen::MatrixXd::Zero(state_multibody->get_nv(), 4);
+      tau_f = Eigen::MatrixXd::Zero(6, 4);
       tau_f.row(2).fill(1.0);
       tau_f.row(3) << 0.0, 0.1525, 0.0, -0.1525;
       tau_f.row(4) << -0.1525, 0.0, 0.1525, 0.0;
       tau_f.row(5) << -0.01515, 0.01515, -0.01515, 0.01515;
-      actuation = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_multibody, n_rotors, tau_f);
+      actuation = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_multibody, tau_f);
       break;
     case ActuationModelTypes::ActuationModelSquashingFull:
       state_multibody = boost::static_pointer_cast<crocoddyl::StateMultibody>(state);
@@ -97,6 +96,12 @@ boost::shared_ptr<crocoddyl::ActuationModelAbstract> ActuationModelFactory::crea
       break;
   }
   return actuation;
+}
+
+void updateActuation(const boost::shared_ptr<crocoddyl::ActuationModelAbstract>& model,
+                     const boost::shared_ptr<crocoddyl::ActuationDataAbstract>& data, const Eigen::VectorXd& x,
+                     const Eigen::VectorXd& u) {
+  model->calc(data, x, u);
 }
 
 }  // namespace unittest

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, University of Edinburgh, LAAS-CNRS
+// Copyright (C) 2019-2020, University of Edinburgh, LAAS-CNRS
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ void CostModelNumDiffTpl<Scalar>::calcDiff(const boost::shared_ptr<CostDataAbstr
                                            const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
   boost::shared_ptr<Data> data_nd = boost::static_pointer_cast<Data>(data);
 
-  const Scalar& c0 = data_nd->cost;
+  const Scalar c0 = data_nd->cost;
   const VectorXs& r0 = data_nd->r;
   if (get_with_gauss_approx()) {
     model_->get_activation()->calc(data_nd->data_0->activation, r0);
@@ -51,7 +51,7 @@ void CostModelNumDiffTpl<Scalar>::calcDiff(const boost::shared_ptr<CostDataAbstr
     model_->get_state()->integrate(x, data_nd->dx, data_nd->xp);
     // call the update function on the pinocchio data
     for (size_t i = 0; i < reevals_.size(); ++i) {
-      reevals_[i](data_nd->xp);
+      reevals_[i](data_nd->xp, u);
     }
     // cost(x+dx, u)
     model_->calc(data_nd->data_x[ix], data_nd->xp, u);
@@ -66,14 +66,14 @@ void CostModelNumDiffTpl<Scalar>::calcDiff(const boost::shared_ptr<CostDataAbstr
 
   // Computing the d cost(x,u) / du
   data_nd->du.setZero();
-  // call the update function on the pinocchio data
-  for (std::size_t i = 0; i < reevals_.size(); ++i) {
-    reevals_[i](x);
-  }
   for (std::size_t iu = 0; iu < model_->get_nu(); ++iu) {
     // up = u + du
     data_nd->du(iu) = disturbance_;
     data_nd->up = u + data_nd->du;
+    // call the update function
+    for (std::size_t i = 0; i < reevals_.size(); ++i) {
+      reevals_[i](x, data_nd->up);
+    }
     // cost(x, u+du)
     model_->calc(data_nd->data_u[iu], x, data_nd->up);
     // Lu
@@ -109,12 +109,12 @@ const boost::shared_ptr<CostModelAbstractTpl<Scalar> >& CostModelNumDiffTpl<Scal
 }
 
 template <typename Scalar>
-const Scalar& CostModelNumDiffTpl<Scalar>::get_disturbance() const {
+const Scalar CostModelNumDiffTpl<Scalar>::get_disturbance() const {
   return disturbance_;
 }
 
 template <typename Scalar>
-void CostModelNumDiffTpl<Scalar>::set_disturbance(const Scalar& disturbance) {
+void CostModelNumDiffTpl<Scalar>::set_disturbance(const Scalar disturbance) {
   disturbance_ = disturbance;
 }
 

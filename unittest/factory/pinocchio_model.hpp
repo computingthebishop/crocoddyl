@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, University of Edinburgh
+// Copyright (C) 2019-2020, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ class PinocchioModelFactory {
 
   boost::shared_ptr<pinocchio::Model> create() const;
   const std::string& get_frame_name() const;
-  const std::size_t& get_frame_id() const;
+  std::size_t get_frame_id() const;
 
  private:
   boost::shared_ptr<pinocchio::Model> model_;  //!< The pointer to the state in testing
@@ -67,11 +67,13 @@ class PinocchioModelFactory {
  * differentiation. We use the address of the object to avoid a copy from the
  * "boost::bind".
  *
- * @param model is the rigid body robot model.
- * @param data contains the results of the computations.
- * @param x is the state vector.
+ * @param model[in]  Pinocchio model
+ * @param data[out]  Pinocchio data
+ * @param x[in]      State vector
+ * @param u[in]      Control vector
  */
-void updateAllPinocchio(pinocchio::Model* const model, pinocchio::Data* data, const Eigen::VectorXd& x);
+void updateAllPinocchio(pinocchio::Model* const model, pinocchio::Data* data, const Eigen::VectorXd& x,
+                        const Eigen::VectorXd& u = Eigen::VectorXd());
 
 }  // namespace unittest
 }  // namespace crocoddyl

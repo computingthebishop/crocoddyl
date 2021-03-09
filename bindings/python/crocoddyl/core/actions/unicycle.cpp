@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,6 +54,8 @@ void exposeActionUnicycle() {
                                          const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &ActionModelAbstract::calcDiff, bp::args("self", "data", "x"))
       .def("createData", &ActionModelUnicycle::createData, bp::args("self"), "Create the unicycle action data.")
+      .add_property("dt", bp::make_function(&ActionModelUnicycle::get_dt),
+                    bp::make_function(&ActionModelUnicycle::set_dt), "integration time")
       .add_property("costWeights",
                     bp::make_function(&ActionModelUnicycle::get_cost_weights, bp::return_internal_reference<>()),
                     bp::make_function(&ActionModelUnicycle::set_cost_weights), "cost weights");

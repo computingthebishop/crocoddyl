@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, University of Oxford
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ struct ActivationBoundsTpl {
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
-  ActivationBoundsTpl(const VectorXs& lower, const VectorXs& upper, const Scalar& b = (Scalar)1.)
+  ActivationBoundsTpl(const VectorXs& lower, const VectorXs& upper, const Scalar b = (Scalar)1.)
       : lb(lower), ub(upper), beta(b) {
     if (lb.size() != ub.size()) {
       throw_pretty("Invalid argument: "
@@ -59,8 +59,17 @@ struct ActivationBoundsTpl {
       beta = Scalar(1.);
     }
   }
-  ActivationBoundsTpl(const ActivationBoundsTpl& bounds) : lb(bounds.lb), ub(bounds.ub), beta(bounds.beta) {}
+  ActivationBoundsTpl(const ActivationBoundsTpl& other) : lb(other.lb), ub(other.ub), beta(other.beta) {}
   ActivationBoundsTpl() : beta(Scalar(1.)) {}
+
+  ActivationBoundsTpl& operator=(const ActivationBoundsTpl& other) {
+    if (this != &other) {
+      lb = other.lb;
+      ub = other.ub;
+      beta = other.beta;
+    }
+    return *this;
+  }
 
   VectorXs lb;
   VectorXs ub;
