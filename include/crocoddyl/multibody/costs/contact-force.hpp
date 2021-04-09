@@ -13,6 +13,7 @@
 #include "crocoddyl/core/cost-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
 #include "crocoddyl/multibody/contact-base.hpp"
+#include "crocoddyl/multibody/contacts/contact-2d.hpp"
 #include "crocoddyl/multibody/contacts/contact-3d.hpp"
 #include "crocoddyl/multibody/contacts/contact-6d.hpp"
 #include "crocoddyl/multibody/data/contacts.hpp"
@@ -228,7 +229,18 @@ struct CostDataContactForceTpl : public CostDataAbstractTpl<_Scalar> {
         if (d6d != NULL) {
           contact_type = Contact6D;
           if (model->get_activation()->get_nr() != 6) {
-            throw_pretty("Domain error: nr isn't defined as 6 in the activation model for the 3d contact in " +
+            throw_pretty("Domain error: nr isn't defined as 6 in the activation model for the wrench contact in " +
+                         frame_name);
+          }
+          found_contact = true;
+          contact = it->second;
+          break;
+        }
+        ContactData2DTpl<Scalar>* d2d = dynamic_cast<ContactData2DTpl<Scalar>*>(it->second.get());
+        if (d2d != NULL) {
+          contact_type = Contact2D;
+          if (model->get_activation()->get_nr() != 3) {
+            throw_pretty("Domain error: nr isn't defined as 3 in the activation model for the 2d contact in " +
                          frame_name);
           }
           found_contact = true;

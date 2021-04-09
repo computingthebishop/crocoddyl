@@ -76,6 +76,9 @@ void CostModelContactForceTpl<Scalar>::calc(const boost::shared_ptr<CostDataAbst
     case Contact6D:
       data->r = (d->contact->jMf.actInv(d->contact->f) - fref_.force).toVector();
       break;
+    case Contact2D:
+      data->r = (d->contact->jMf.actInv(d->contact->f) - fref_.force).linear();
+      break;
     default:
       break;
   }
@@ -102,6 +105,10 @@ void CostModelContactForceTpl<Scalar>::calcDiff(const boost::shared_ptr<CostData
     case Contact6D:
       data->Rx = df_dx;
       data->Ru = df_du;
+      break;
+    case Contact2D:
+      data->Rx = df_dx.template topRows<3>();
+      data->Ru = df_du.template topRows<3>();
       break;
     default:
       break;
