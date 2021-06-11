@@ -66,13 +66,14 @@ class GepettoDisplay(DisplayAbstract):
     def __init__(self, robot, rate=-1, freq=1, cameraTF=None, floor=True, frameNames=[], visibility=False):
         DisplayAbstract.__init__(self, rate, freq)
         self.robot = robot
+        self.robotName = self.robot.model.name
 
         # Visuals properties
         self.fullVisibility = visibility
         self.floorGroup = "world/floor"
-        self.forceGroup = "world/robot/contact_forces"
-        self.frictionGroup = "world/robot/friction_cone"
-        self.frameTrajGroup = "world/robot/frame_trajectory"
+        self.forceGroup = "world/" + self.robotName + "/contact_forces"
+        self.frictionGroup = "world/" + self.robotName + "/friction_cone"
+        self.frameTrajGroup = "world/" + self.robotName + "/frame_trajectory"
         self.backgroundColor = [1., 1., 1., 1.]
         self.floorScale = [0.5, 0.5, 0.5]
         self.floorColor = [0.7, 0.7, 0.7, 1.]
@@ -236,7 +237,7 @@ class GepettoDisplay(DisplayAbstract):
     def _addRobot(self):
         # Spawn robot model
         self.robot.initViewer(windowName="crocoddyl", loadModel=False)
-        self.robot.loadViewerModel(rootNodeName="robot")
+        self.robot.loadViewerModel(rootNodeName=self.robotName)
 
     def _setBackground(self):
         # Set white background and floor
