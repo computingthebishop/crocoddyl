@@ -1,18 +1,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "python/crocoddyl/multibody/multibody.hpp"
 #include "crocoddyl/multibody/impulses/impulse-6d.hpp"
+#include "python/crocoddyl/multibody/multibody.hpp"
 
 namespace crocoddyl {
 namespace python {
 
 void exposeImpulse6D() {
+  bp::register_ptr_to_python<boost::shared_ptr<ImpulseModel6D> >();
+
   bp::class_<ImpulseModel6D, bp::bases<ImpulseModelAbstract> >(
       "ImpulseModel6D",
       "Rigid 6D impulse model.\n\n"

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, University of Oxford
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -198,6 +198,19 @@ class ActionModelAbstractTpl {
    * @brief Modify the control upper bounds
    */
   void set_u_ub(const VectorXs& u_ub);
+
+  /**
+   * @brief Print information on the action model
+   */
+  template <class Scalar>
+  friend std::ostream& operator<<(std::ostream& os, const ActionModelAbstractTpl<Scalar>& model);
+
+  /**
+   * @brief Print relevant information of the action model
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
 
  protected:
   std::size_t nu_;                          //!< Control dimension

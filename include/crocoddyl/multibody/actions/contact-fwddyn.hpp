@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh, 2020 CTU, INRIA
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, CTU, INRIA, University of Oxford
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,14 +66,16 @@ class DifferentialActionModelContactFwdDynamicsTpl : public DifferentialActionMo
   void set_armature(const VectorXs& armature);
   void set_damping_factor(const Scalar damping);
 
+  /**
+   * @brief Print relevant information of the contact forward-dynamics model
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
+
  protected:
-  using Base::has_control_limits_;  //!< Indicates whether any of the control limits
-  using Base::nr_;                  //!< Dimension of the cost residual
-  using Base::nu_;                  //!< Control dimension
-  using Base::state_;               //!< Model of the state
-  using Base::u_lb_;                //!< Lower control limits
-  using Base::u_ub_;                //!< Upper control limits
-  using Base::unone_;               //!< Neutral state
+  using Base::nu_;     //!< Control dimension
+  using Base::state_;  //!< Model of the state
 
  private:
   boost::shared_ptr<ActuationModelAbstract> actuation_;

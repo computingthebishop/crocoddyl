@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh, CTU, INRIA
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, CTU, INRIA, University of Oxford
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -211,6 +211,12 @@ bool DifferentialActionModelContactFwdDynamicsTpl<Scalar>::checkData(
   } else {
     return false;
   }
+}
+
+template <typename Scalar>
+void DifferentialActionModelContactFwdDynamicsTpl<Scalar>::print(std::ostream& os) const {
+  os << "DifferentialActionModelContactFwdDynamics {nx=" << state_->get_nx() << ", ndx=" << state_->get_ndx()
+     << ", nu=" << nu_ << ", nc=" << contacts_->get_nc() << "}";
 }
 
 template <typename Scalar>
