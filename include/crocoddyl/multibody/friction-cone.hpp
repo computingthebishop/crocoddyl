@@ -50,15 +50,14 @@ class FrictionConeTpl {
    * @param[in] nf          Number of facets (default 4)
    * @param[in] inner_appr  Label that describes the type of friction cone approximation (inner/outer)
    * @param[in] min_nforce  Minimum normal force (default 0.)
-   * @param[in] max_nforce  Maximum normal force (default inf number))
+   * @param[in] max_nforce  Maximum normal force (default maximum floating number))
    */
   FrictionConeTpl(const Matrix3s& R, const Scalar mu, std::size_t nf = 4, const bool inner_appr = true,
-                  const Scalar min_nforce = Scalar(0.),
-                  const Scalar max_nforce = std::numeric_limits<Scalar>::infinity());
+                  const Scalar min_nforce = Scalar(0.), const Scalar max_nforce = std::numeric_limits<Scalar>::max());
   DEPRECATED("Use constructor based on rotation matrix.",
              FrictionConeTpl(const Vector3s& normal, const Scalar mu, std::size_t nf = 4, const bool inner_appr = true,
                              const Scalar min_nforce = Scalar(0.),
-                             const Scalar max_nforce = std::numeric_limits<Scalar>::infinity());)
+                             const Scalar max_nforce = std::numeric_limits<Scalar>::max());)
 
   /**
    * @brief Initialize the wrench cone
@@ -79,7 +78,7 @@ class FrictionConeTpl {
   void update();
   DEPRECATED("Use update()", void update(const Vector3s& normal, const Scalar mu, const bool inner_appr = true,
                                          const Scalar min_nforce = Scalar(0.),
-                                         const Scalar max_nforce = std::numeric_limits<Scalar>::infinity()));
+                                         const Scalar max_nforce = std::numeric_limits<Scalar>::max()));
 
   /**
    * @brief Return the matrix of friction cone

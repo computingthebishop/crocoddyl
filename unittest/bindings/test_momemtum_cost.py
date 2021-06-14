@@ -1,8 +1,16 @@
 import numpy as np
 
 import pinocchio
-import crocoddyl
+from crocoddyl import (ContactModel6D, ContactModelMultiple, CostModelSum, DifferentialActionModelNumDiff)
+from crocoddyl import ActuationModelFloatingBase as ActuationModelFreeFloating
+from crocoddyl import CostModelCentroidalMomentum as CostModelMomentum
+from crocoddyl import DifferentialActionModelContactFwdDynamics as DifferentialActionModelFloatingInContact
+from crocoddyl import StateMultibody as StatePinocchio
+from crocoddyl import FramePlacement
 import example_robot_data
+from crocoddyl.utils import a2m, m2a
+
+from pinocchio.utils import rand
 from test_utils import NUMDIFF_MODIFIER, assertNumDiff
 
 # Loading ANYmal robot
@@ -20,42 +28,39 @@ rdata = rmodel.createData()
 # -----------------------------------------
 
 q = pinocchio.randomConfiguration(rmodel)
-v = pinocchio.utils.rand(rmodel.nv)
-x = np.concatenate([q, v])
-u = pinocchio.utils.rand(rmodel.nv - 6)
+v = rand(rmodel.nv)
+x = m2a(np.concatenate([q, v]))
+u = m2a(rand(rmodel.nv - 6))
 # -------------------------------------------------
 
 np.set_printoptions(linewidth=400, suppress=True)
 
-state = crocoddyl.StateMultibody(rmodel)
-actModel = crocoddyl.ActuationModelFloatingBase(state)
+State = StatePinocchio(rmodel)
+actModel = ActuationModelFreeFloating(State)
 gains = pinocchio.utils.rand(2)
-Mref_lf = crocoddyl.FramePlacement(rmodel.getFrameId('LF_FOOT'), pinocchio.SE3.Random())
+Mref_lf = FramePlacement(rmodel.getFrameId('LF_FOOT'), pinocchio.SE3.Random())
 
-contactModel6 = crocoddyl.ContactModel6D(state, Mref_lf, actModel.nu, gains)
-rmodel.frames[Mref_lf.id].placement = pinocchio.SE3.Random()
-contactModel = crocoddyl.ContactModelMultiple(state, actModel.nu)
+contactModel6 = ContactModel6D(State, Mref_lf, actModel.nu, gains)
+rmodel.frames[Mref_lf.frame].placement = pinocchio.SE3.Random()
+contactModel = ContactModelMultiple(State, actModel.nu)
 contactModel.addContact("LF_FOOT_contact", contactModel6)
 
 contactData = contactModel.createData(rdata)
 
-model = crocoddyl.DifferentialActionModelContactFwdDynamics(state, actModel, contactModel,
-                                                            crocoddyl.CostModelSum(state, actModel.nu), 0., True)
+model = DifferentialActionModelFloatingInContact(State, actModel, contactModel, CostModelSum(State, actModel.nu), 0.,
+                                                 True)
 
 data = model.createData()
 
 model.calc(data, x, u)
 model.calcDiff(data, x, u)
 
-mnum = crocoddyl.DifferentialActionModelNumDiff(model, False)
+mnum = DifferentialActionModelNumDiff(model, False)
 dnum = mnum.createData()
 mnum.calc(dnum, x, u)
 mnum.calcDiff(dnum, x, u)
 
-model.costs.addCost(
-    "momentum",
-    crocoddyl.CostModelResidual(state, crocoddyl.ResidualModelCentroidalMomentum(state, np.random.rand(6),
-                                                                                 actModel.nu)), 1.)
+model.costs.addCost("momentum", CostModelMomentum(State, a2m(np.random.rand(6)), actModel.nu), 1.)
 
 data = model.createData()
 
@@ -65,7 +70,7 @@ cdata = data.costs.costs['momentum']
 model.calc(data, x, u)
 model.calcDiff(data, x, u)
 
-mnum = crocoddyl.DifferentialActionModelNumDiff(model, False)
+mnum = DifferentialActionModelNumDiff(model, False)
 dnum = mnum.createData()
 
 mnum.calc(dnum, x, u)

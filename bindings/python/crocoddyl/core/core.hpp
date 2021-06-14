@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,6 @@ void exposeStateAbstract();
 void exposeActuationAbstract();
 void exposeActionAbstract();
 void exposeDifferentialActionAbstract();
-void exposeResidualAbstract();
 void exposeActivationAbstract();
 void exposeSquashingAbstract();
 void exposeSquashingSmoothSat();
@@ -28,9 +27,7 @@ void exposeDataCollectorActuation();
 void exposeIntegratedActionEuler();
 void exposeIntegratedActionRK4();
 void exposeCostAbstract();
-void exposeResidualControl();
 void exposeCostSum();
-void exposeCostResidual();
 void exposeCostControl();
 void exposeActionNumDiff();
 void exposeDifferentialActionNumDiff();
@@ -49,7 +46,6 @@ void exposeActivationQuadraticBarrier();
 void exposeActivationWeightedQuadraticBarrier();
 void exposeActivationSmooth1Norm();
 void exposeActivationSmooth2Norm();
-void exposeActivation2NormBarrier();
 void exposeSolverDDP();
 void exposeSolverKKT();
 void exposeSolverFDDP();
@@ -57,7 +53,6 @@ void exposeSolverBoxQP();
 void exposeSolverBoxDDP();
 void exposeSolverBoxFDDP();
 void exposeCallbacks();
-void exposeStopWatch();
 
 void exposeCore();
 

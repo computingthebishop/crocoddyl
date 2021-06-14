@@ -62,12 +62,12 @@ class StateAbstractTpl {
   virtual ~StateAbstractTpl();
 
   /**
-   * @brief Generate a zero state
+   * @brief Generate a zero reference state
    */
   virtual VectorXs zero() const = 0;
 
   /**
-   * @brief Generate a random state
+   * @brief Generate a random reference state
    */
   virtual VectorXs rand() const = 0;
 

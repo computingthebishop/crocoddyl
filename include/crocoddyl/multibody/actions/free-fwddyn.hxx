@@ -29,7 +29,7 @@ DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::DifferentialActionModelFreeFw
       actuation_(actuation),
       costs_(costs),
       pinocchio_(*state->get_pinocchio().get()),
-      without_armature_(true),
+      with_armature_(true),
       armature_(VectorXs::Zero(state->get_nv())) {
   if (costs_->get_nu() != nu_) {
     throw_pretty("Invalid argument: "
@@ -62,7 +62,7 @@ void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::calc(
   actuation_->calc(d->multibody.actuation, x, u);
 
   // Computing the dynamics using ABA or manually for armature case
-  if (without_armature_) {
+  if (with_armature_) {
     d->xout = pinocchio::aba(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau);
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
@@ -102,7 +102,7 @@ void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::calcDiff(
   actuation_->calcDiff(d->multibody.actuation, x, u);
 
   // Computing the dynamics derivatives
-  if (without_armature_) {
+  if (with_armature_) {
     pinocchio::computeABADerivatives(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau, d->Fx.leftCols(nv),
                                      d->Fx.rightCols(nv), d->pinocchio.Minv);
     d->Fx.noalias() += d->pinocchio.Minv * d->multibody.actuation->dtau_dx;
@@ -166,12 +166,6 @@ void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::quasiStatic(
 }
 
 template <typename Scalar>
-void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::print(std::ostream& os) const {
-  os << "DifferentialActionModelFreeFwdDynamics {nx=" << state_->get_nx() << ", ndx=" << state_->get_ndx()
-     << ", nu=" << nu_ << "}";
-}
-
-template <typename Scalar>
 pinocchio::ModelTpl<Scalar>& DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::get_pinocchio() const {
   return pinocchio_;
 }
@@ -201,7 +195,7 @@ void DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::set_armature(const Vecto
   }
 
   armature_ = armature;
-  without_armature_ = false;
+  with_armature_ = false;
 }
 
 }  // namespace crocoddyl

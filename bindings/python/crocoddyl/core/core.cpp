@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, University of Edinburgh, LAAS-CNRS
+// Copyright (C) 2019-2020, University of Edinburgh, LAAS-CNRS
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,6 @@ void exposeCore() {
   exposeActuationAbstract();
   exposeActionAbstract();
   exposeDifferentialActionAbstract();
-  exposeResidualAbstract();
   exposeActivationAbstract();
   exposeSquashingAbstract();
   exposeSquashingSmoothSat();
@@ -26,9 +25,7 @@ void exposeCore() {
   exposeIntegratedActionEuler();
   exposeIntegratedActionRK4();
   exposeCostAbstract();
-  exposeResidualControl();
   exposeCostSum();
-  exposeCostResidual();
   exposeCostControl();
   exposeActionNumDiff();
   exposeDifferentialActionNumDiff();
@@ -47,7 +44,6 @@ void exposeCore() {
   exposeActivationWeightedQuadraticBarrier();
   exposeActivationSmooth1Norm();
   exposeActivationSmooth2Norm();
-  exposeActivation2NormBarrier();
   exposeSolverKKT();
   exposeSolverDDP();
   exposeSolverFDDP();
@@ -55,7 +51,6 @@ void exposeCore() {
   exposeSolverBoxDDP();
   exposeSolverBoxFDDP();
   exposeCallbacks();
-  exposeStopWatch();
 }
 
 }  // namespace python

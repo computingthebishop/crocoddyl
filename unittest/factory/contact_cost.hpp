@@ -20,11 +20,11 @@ namespace unittest {
 
 struct ContactCostModelTypes {
   enum Type {
-    CostModelResidualContactForce,
-    CostModelResidualContactCoPPosition,
-    CostModelResidualContactFrictionCone,
-    CostModelResidualContactWrenchCone,
-    CostModelResidualContactControlGrav,
+    CostModelContactForce,
+    CostModelContactCoPPosition,
+    CostModelContactFrictionCone,
+    CostModelContactWrenchCone,
+    CostModelControlGravContact,
     NbContactCostModelTypes
   };
   static std::vector<Type> init_all() {

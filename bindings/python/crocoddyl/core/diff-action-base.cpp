@@ -1,14 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, University of Oxford
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "python/crocoddyl/core/core.hpp"
 #include "python/crocoddyl/core/diff-action-base.hpp"
-#include "python/crocoddyl/utils/printable.hpp"
 
 namespace crocoddyl {
 namespace python {
@@ -70,9 +69,6 @@ void exposeDifferentialActionAbstract() {
                ":param maxiter: maximum allowed number of iterations\n"
                ":param tol: stopping tolerance criteria (default 1e-9)\n"
                ":return u: quasic-static control"))
-      .def("quasiStatic", &DifferentialActionModelAbstract_wrap::quasiStatic,
-           &DifferentialActionModelAbstract_wrap::default_quasiStatic,
-           bp::args("self", "data", "u", "x", "maxiter", "tol"))
       .add_property("nu", bp::make_function(&DifferentialActionModelAbstract_wrap::get_nu),
                     "dimension of control vector")
       .add_property("nr", bp::make_function(&DifferentialActionModelAbstract_wrap::get_nr),
@@ -91,8 +87,7 @@ void exposeDifferentialActionAbstract() {
       .add_property("u_ub",
                     bp::make_function(&DifferentialActionModelAbstract_wrap::get_u_ub,
                                       bp::return_value_policy<bp::return_by_value>()),
-                    &DifferentialActionModelAbstract_wrap::set_u_ub, "upper control limits")
-      .def(PrintableVisitor<DifferentialActionModelAbstract>());
+                    &DifferentialActionModelAbstract_wrap::set_u_ub, "upper control limits");
 
   bp::register_ptr_to_python<boost::shared_ptr<DifferentialActionDataAbstract> >();
 

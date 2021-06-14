@@ -22,7 +22,6 @@ SET(${PROJECT_NAME}_CPP_TESTS
   test_states
   test_actuation
   test_activations
-  test_residuals
   test_costs
   test_costs_noFF
   test_cost_sum

@@ -23,7 +23,6 @@ from __future__ import print_function
 import pandas as pd
 import sys
 from os.path import exists, splitext, basename
-
 pd.options.display.width = 0
 
 

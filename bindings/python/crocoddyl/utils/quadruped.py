@@ -128,7 +128,7 @@ class SimpleQuadrupedalGaitProblem:
         lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
         lhFootPos0 = self.rdata.oMf[self.lhFootId].translation
         comRef = (rfFootPos0 + rhFootPos0 + lfFootPos0 + lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2].item()
+        comRef[2] = np.asscalar(pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2])
 
         # Defining the action models along the time instances
         loco3dModel = []
@@ -179,7 +179,7 @@ class SimpleQuadrupedalGaitProblem:
         lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
         lhFootPos0 = self.rdata.oMf[self.lhFootId].translation
         comRef = (rfFootPos0 + rhFootPos0 + lfFootPos0 + lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2].item()
+        comRef[2] = np.asscalar(pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2])
 
         # Defining the action models along the time instances
         loco3dModel = []
@@ -227,7 +227,7 @@ class SimpleQuadrupedalGaitProblem:
         lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
         lhFootPos0 = self.rdata.oMf[self.lhFootId].translation
         comRef = (rfFootPos0 + rhFootPos0 + lfFootPos0 + lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2].item()
+        comRef[2] = np.asscalar(pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2])
 
         # Defining the action models along the time instances
         loco3dModel = []
@@ -276,7 +276,7 @@ class SimpleQuadrupedalGaitProblem:
         lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
         lhFootPos0 = self.rdata.oMf[self.lhFootId].translation
         comRef = (rfFootPos0 + rhFootPos0 + lfFootPos0 + lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2].item()
+        comRef[2] = np.asscalar(pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2])
 
         # Defining the action models along the time instances
         loco3dModel = []
@@ -311,7 +311,7 @@ class SimpleQuadrupedalGaitProblem:
         lfFootPos0[2] = 0.
         lhFootPos0[2] = 0.
         comRef = (rfFootPos0 + rhFootPos0 + lfFootPos0 + lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2].item()
+        comRef[2] = np.asscalar(pinocchio.centerOfMass(self.rmodel, self.rdata, q0)[2])
 
         loco3dModel = []
         takeOff = [
@@ -424,38 +424,33 @@ class SimpleQuadrupedalGaitProblem:
         # Creating the cost model for a contact phase
         costModel = crocoddyl.CostModelSum(self.state, self.actuation.nu)
         if isinstance(comTask, np.ndarray):
-            comResidual = crocoddyl.ResidualModelCoMPosition(self.state, comTask, self.actuation.nu)
-            comTrack = crocoddyl.CostModelResidual(self.state, comResidual)
+            comTrack = crocoddyl.CostModelCoMPosition(self.state, comTask, self.actuation.nu)
             costModel.addCost("comTrack", comTrack, 1e6)
         for i in supportFootIds:
             cone = crocoddyl.FrictionCone(self.Rsurf, self.mu, 4, False)
-            coneResidual = crocoddyl.ResidualModelContactFrictionCone(self.state, i, cone, self.actuation.nu)
-            coneActivation = crocoddyl.ActivationModelQuadraticBarrier(crocoddyl.ActivationBounds(cone.lb, cone.ub))
-            frictionCone = crocoddyl.CostModelResidual(self.state, coneActivation, coneResidual)
+            frictionCone = crocoddyl.CostModelContactFrictionCone(
+                self.state, crocoddyl.ActivationModelQuadraticBarrier(crocoddyl.ActivationBounds(cone.lb, cone.ub)),
+                crocoddyl.FrameFrictionCone(i, cone), self.actuation.nu)
             costModel.addCost(self.rmodel.frames[i].name + "_frictionCone", frictionCone, 1e1)
         if swingFootTask is not None:
             for i in swingFootTask:
-                frameTranslationResidual = crocoddyl.ResidualModelFrameTranslation(self.state, i.id,
-                                                                                   i.placement.translation,
-                                                                                   self.actuation.nu)
-                footTrack = crocoddyl.CostModelResidual(self.state, frameTranslationResidual)
+                xref = crocoddyl.FrameTranslation(i.id, i.placement.translation)
+                footTrack = crocoddyl.CostModelFrameTranslation(self.state, xref, self.actuation.nu)
                 costModel.addCost(self.rmodel.frames[i.id].name + "_footTrack", footTrack, 1e6)
 
         stateWeights = np.array([0.] * 3 + [500.] * 3 + [0.01] * (self.rmodel.nv - 6) + [10.] * 6 + [1.] *
                                 (self.rmodel.nv - 6))
-        stateResidual = crocoddyl.ResidualModelState(self.state, self.rmodel.defaultState, self.actuation.nu)
-        stateActivation = crocoddyl.ActivationModelWeightedQuad(stateWeights**2)
-        ctrlResidual = crocoddyl.ResidualModelControl(self.state, self.actuation.nu)
-        stateReg = crocoddyl.CostModelResidual(self.state, stateActivation, stateResidual)
-        ctrlReg = crocoddyl.CostModelResidual(self.state, ctrlResidual)
+        stateReg = crocoddyl.CostModelState(self.state, crocoddyl.ActivationModelWeightedQuad(stateWeights**2),
+                                            self.rmodel.defaultState, self.actuation.nu)
+        ctrlReg = crocoddyl.CostModelControl(self.state, self.actuation.nu)
         costModel.addCost("stateReg", stateReg, 1e1)
         costModel.addCost("ctrlReg", ctrlReg, 1e-1)
 
         lb = np.concatenate([self.state.lb[1:self.state.nv + 1], self.state.lb[-self.state.nv:]])
         ub = np.concatenate([self.state.ub[1:self.state.nv + 1], self.state.ub[-self.state.nv:]])
-        stateBoundsResidual = crocoddyl.ResidualModelState(self.state, 0 * self.rmodel.defaultState, self.actuation.nu)
-        stateBoundsActivation = crocoddyl.ActivationModelQuadraticBarrier(crocoddyl.ActivationBounds(lb, ub))
-        stateBounds = crocoddyl.CostModelResidual(self.state, stateBoundsActivation, stateBoundsResidual)
+        stateBounds = crocoddyl.CostModelState(
+            self.state, crocoddyl.ActivationModelQuadraticBarrier(crocoddyl.ActivationBounds(lb, ub)),
+            0 * self.rmodel.defaultState, self.actuation.nu)
         costModel.addCost("stateBounds", stateBounds, 1e3)
 
         # Creating the action model for the KKT dynamics with simpletic Euler
@@ -498,27 +493,22 @@ class SimpleQuadrupedalGaitProblem:
         costModel = crocoddyl.CostModelSum(self.state, self.actuation.nu)
         for i in supportFootIds:
             cone = crocoddyl.FrictionCone(self.Rsurf, self.mu, 4, False)
-            coneResidual = crocoddyl.ResidualModelContactFrictionCone(self.state, i, cone, self.actuation.nu)
-            coneActivation = crocoddyl.ActivationModelQuadraticBarrier(crocoddyl.ActivationBounds(cone.lb, cone.ub))
-            frictionCone = crocoddyl.CostModelResidual(self.state, coneActivation, coneResidual)
+            frictionCone = crocoddyl.CostModelContactFrictionCone(
+                self.state, crocoddyl.ActivationModelQuadraticBarrier(crocoddyl.ActivationBounds(cone.lb, cone.ub)),
+                crocoddyl.FrameFrictionCone(i, cone), self.actuation.nu)
             costModel.addCost(self.rmodel.frames[i].name + "_frictionCone", frictionCone, 1e1)
         if swingFootTask is not None:
             for i in swingFootTask:
-                framePlacementResidual = crocoddyl.ResidualModelFramePlacement(self.state, i.id, i.placement,
-                                                                               self.actuation.nu)
-                frameVelocityResidual = crocoddyl.ResidualModelFrameVelocity(self.state, i.id, pinocchio.Motion.Zero(),
-                                                                             self.actuation.nu)
-                footTrack = crocoddyl.CostModelResidual(self.state, framePlacementResidual)
-                impulseFootVelCost = crocoddyl.CostModelResidual(self.state, frameVelocityResidual)
-                costModel.addCost(self.rmodel.frames[i.id].name + "_footTrack", footTrack, 1e7)
-                costModel.addCost(self.rmodel.frames[i.id].name + "_impulseVel", impulseFootVelCost, 1e6)
-
+                xref = crocoddyl.FrameTranslation(i.frame, i.oMf.translation)
+                vref = crocoddyl.FrameMotion(i.frame, pinocchio.Motion.Zero())
+                footTrack = crocoddyl.CostModelFrameTranslation(self.state, xref, self.actuation.nu)
+                impulseFootVelCost = crocoddyl.CostModelFrameVelocity(self.state, vref, self.actuation.nu)
+                costModel.addCost(self.rmodel.frames[i.frame].name + "_footTrack", footTrack, 1e7)
+                costModel.addCost(self.rmodel.frames[i.frame].name + "_impulseVel", impulseFootVelCost, 1e6)
         stateWeights = np.array([0.] * 3 + [500.] * 3 + [0.01] * (self.rmodel.nv - 6) + [10.] * self.rmodel.nv)
-        stateResidual = crocoddyl.ResidualModelState(self.state, self.rmodel.defaultState, self.actuation.nu)
-        stateActivation = crocoddyl.ActivationModelWeightedQuad(stateWeights**2)
-        ctrlResidual = crocoddyl.ResidualModelControl(self.state, self.actuation.nu)
-        stateReg = crocoddyl.CostModelResidual(self.state, stateActivation, stateResidual)
-        ctrlReg = crocoddyl.CostModelResidual(self.state, ctrlResidual)
+        stateReg = crocoddyl.CostModelState(self.state, crocoddyl.ActivationModelWeightedQuad(stateWeights**2),
+                                            self.rmodel.defaultState, self.actuation.nu)
+        ctrlReg = crocoddyl.CostModelControl(self.state, self.actuation.nu)
         costModel.addCost("stateReg", stateReg, 1e1)
         costModel.addCost("ctrlReg", ctrlReg, 1e-3)
 
@@ -547,15 +537,12 @@ class SimpleQuadrupedalGaitProblem:
         costModel = crocoddyl.CostModelSum(self.state, 0)
         if swingFootTask is not None:
             for i in swingFootTask:
-                frameTranslationResidual = crocoddyl.ResidualModelFrameTranslation(self.state, i.id,
-                                                                                   i.placement.translation, 0)
-                footTrack = crocoddyl.CostModelResidual(self.state, frameTranslationResidual)
+                xref = crocoddyl.FrameTranslation(i.id, i.placement.translation)
+                footTrack = crocoddyl.CostModelFrameTranslation(self.state, xref, 0)
                 costModel.addCost(self.rmodel.frames[i.id].name + "_footTrack", footTrack, 1e7)
-
         stateWeights = np.array([1.] * 6 + [10.] * (self.rmodel.nv - 6) + [10.] * self.rmodel.nv)
-        stateResidual = crocoddyl.ResidualModelState(self.state, self.rmodel.defaultState, 0)
-        stateActivation = crocoddyl.ActivationModelWeightedQuad(stateWeights**2)
-        stateReg = crocoddyl.CostModelResidual(self.state, stateActivation, stateResidual)
+        stateReg = crocoddyl.CostModelState(self.state, crocoddyl.ActivationModelWeightedQuad(stateWeights**2),
+                                            self.rmodel.defaultState, 0)
         costModel.addCost("stateReg", stateReg, 1e1)
 
         # Creating the action model for the KKT dynamics with simpletic Euler

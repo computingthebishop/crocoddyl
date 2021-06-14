@@ -1,14 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, The University of Edinburgh, University of Oxford
+// Copyright (C) 2019-2020, LAAS-CNRS, The University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-
-#include <iostream>
-#include <typeinfo>
-#include <boost/core/demangle.hpp>
 
 #include "crocoddyl/core/utils/exception.hpp"
 
@@ -95,11 +91,6 @@ bool DifferentialActionModelAbstractTpl<Scalar>::checkData(const boost::shared_p
 }
 
 template <typename Scalar>
-void DifferentialActionModelAbstractTpl<Scalar>::print(std::ostream& os) const {
-  os << boost::core::demangle(typeid(*this).name());
-}
-
-template <typename Scalar>
 std::size_t DifferentialActionModelAbstractTpl<Scalar>::get_nu() const {
   return nu_;
 }
@@ -152,12 +143,6 @@ void DifferentialActionModelAbstractTpl<Scalar>::set_u_ub(const VectorXs& u_ub) 
 template <typename Scalar>
 void DifferentialActionModelAbstractTpl<Scalar>::update_has_control_limits() {
   has_control_limits_ = isfinite(u_lb_.array()).any() && isfinite(u_ub_.array()).any();
-}
-
-template <typename Scalar>
-std::ostream& operator<<(std::ostream& os, const DifferentialActionModelAbstractTpl<Scalar>& model) {
-  model.print(os);
-  return os;
 }
 
 }  // namespace crocoddyl

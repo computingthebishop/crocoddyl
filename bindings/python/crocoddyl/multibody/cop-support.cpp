@@ -6,9 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "crocoddyl/multibody/cop-support.hpp"
-
 #include "python/crocoddyl/multibody/multibody.hpp"
+#include "crocoddyl/multibody/cop-support.hpp"
 #include "python/crocoddyl/utils/printable.hpp"
 
 namespace crocoddyl {

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, University of Oxford
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,6 @@
 #include <vector>
 #include <Eigen/Cholesky>
 #include "crocoddyl/core/solver-base.hpp"
-#include "crocoddyl/core/mathbase.hpp"
 #include "crocoddyl/core/utils/deprecate.hpp"
 
 namespace crocoddyl {
@@ -49,8 +48,6 @@ namespace crocoddyl {
 class SolverDDP : public SolverAbstract {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  typedef typename MathBaseTpl<double>::MatrixXsRowMajor MatrixXdRowMajor;
 
   /**
    * @brief Initialize the DDP solver
@@ -249,7 +246,7 @@ class SolverDDP : public SolverAbstract {
   /**
    * @brief Return the feedback gains \f$\mathbf{K}_{s}\f$
    */
-  const std::vector<MatrixXdRowMajor>& get_K() const;
+  const std::vector<Eigen::MatrixXd>& get_K() const;
 
   /**
    * @brief Return the feedforward gains \f$\mathbf{k}_{s}\f$
@@ -329,20 +326,19 @@ class SolverDDP : public SolverAbstract {
 
   // allocate data
   std::vector<Eigen::MatrixXd> Vxx_;  //!< Hessian of the Value function
-  Eigen::MatrixXd Vxx_tmp_;           //!< Temporary variable for ensuring symmetry of Vxx
   std::vector<Eigen::VectorXd> Vx_;   //!< Gradient of the Value function
   std::vector<Eigen::MatrixXd> Qxx_;  //!< Hessian of the Hamiltonian
   std::vector<Eigen::MatrixXd> Qxu_;  //!< Hessian of the Hamiltonian
   std::vector<Eigen::MatrixXd> Quu_;  //!< Hessian of the Hamiltonian
   std::vector<Eigen::VectorXd> Qx_;   //!< Gradient of the Hamiltonian
   std::vector<Eigen::VectorXd> Qu_;   //!< Gradient of the Hamiltonian
-  std::vector<MatrixXdRowMajor> K_;   //!< Feedback gains
+  std::vector<Eigen::MatrixXd> K_;    //!< Feedback gains
   std::vector<Eigen::VectorXd> k_;    //!< Feed-forward terms
   std::vector<Eigen::VectorXd> fs_;   //!< Gaps/defects between shooting nodes
 
   Eigen::VectorXd xnext_;                              //!< Next state
-  MatrixXdRowMajor FxTVxx_p_;                          //!< fxTVxx_p_
-  std::vector<MatrixXdRowMajor> FuTVxx_p_;             //!< fuTVxx_p_
+  Eigen::MatrixXd FxTVxx_p_;                           //!< fxTVxx_p_
+  std::vector<Eigen::MatrixXd> FuTVxx_p_;              //!< fuTVxx_p_
   Eigen::VectorXd fTVxx_p_;                            //!< fTVxx_p term
   std::vector<Eigen::LLT<Eigen::MatrixXd> > Quu_llt_;  //!< Cholesky LLT solver
   std::vector<Eigen::VectorXd> Quuk_;                  //!< Quuk term

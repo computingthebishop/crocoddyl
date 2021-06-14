@@ -9,11 +9,12 @@
 #ifndef CROCODDYL_MULTIBODY_IMPULSE_BASE_HPP_
 #define CROCODDYL_MULTIBODY_IMPULSE_BASE_HPP_
 
+#include <pinocchio/multibody/data.hpp>
+#include <pinocchio/spatial/force.hpp>
+
 #include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
-#include "crocoddyl/multibody/force-base.hpp"
 #include "crocoddyl/core/utils/to-string.hpp"
-#include "crocoddyl/core/utils/deprecate.hpp"
 
 namespace crocoddyl {
 
@@ -29,7 +30,7 @@ class ImpulseModelAbstractTpl {
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
-  ImpulseModelAbstractTpl(boost::shared_ptr<StateMultibody> state, const std::size_t nc);
+  ImpulseModelAbstractTpl(boost::shared_ptr<StateMultibody> state, const std::size_t ni);
   virtual ~ImpulseModelAbstractTpl();
 
   virtual void calc(const boost::shared_ptr<ImpulseDataAbstract>& data, const Eigen::Ref<const VectorXs>& x) = 0;
@@ -43,52 +44,46 @@ class ImpulseModelAbstractTpl {
   virtual boost::shared_ptr<ImpulseDataAbstract> createData(pinocchio::DataTpl<Scalar>* const data);
 
   const boost::shared_ptr<StateMultibody>& get_state() const;
-  std::size_t get_nc() const;
-  DEPRECATED("Use get_nc().", std::size_t get_ni() const;)
-  std::size_t get_nu() const;
-
-  /**
-   * @brief Print information on the impulse model
-   */
-  template <class Scalar>
-  friend std::ostream& operator<<(std::ostream& os, const ImpulseModelAbstractTpl<Scalar>& model);
-
-  /**
-   * @brief Print relevant information of the impulse model
-   *
-   * @param[out] os  Output stream object
-   */
-  virtual void print(std::ostream& os) const;
+  std::size_t get_ni() const;
 
  protected:
   boost::shared_ptr<StateMultibody> state_;
-  std::size_t nc_;
+  std::size_t ni_;
 };
 
 template <typename _Scalar>
-struct ImpulseDataAbstractTpl : public ForceDataAbstractTpl<_Scalar> {
+struct ImpulseDataAbstractTpl {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
-  typedef ForceDataAbstractTpl<Scalar> Base;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
   template <template <typename Scalar> class Model>
   ImpulseDataAbstractTpl(Model<Scalar>* const model, pinocchio::DataTpl<Scalar>* const data)
-      : Base(model, data), dv0_dq(model->get_nc(), model->get_state()->get_nv()) {
+      : pinocchio(data),
+        joint(0),
+        frame(0),
+        jMf(pinocchio::SE3Tpl<Scalar>::Identity()),
+        Jc(model->get_ni(), model->get_state()->get_nv()),
+        dv0_dq(model->get_ni(), model->get_state()->get_nv()),
+        f(pinocchio::ForceTpl<Scalar>::Zero()),
+        df_dx(model->get_ni(), model->get_state()->get_ndx()) {
+    Jc.setZero();
     dv0_dq.setZero();
+    df_dx.setZero();
   }
   virtual ~ImpulseDataAbstractTpl() {}
 
-  using Base::df_dx;
-  using Base::f;
-  using Base::frame;
-  using Base::Jc;
-  using Base::jMf;
-  using Base::pinocchio;
+  pinocchio::DataTpl<Scalar>* pinocchio;
+  pinocchio::JointIndex joint;
+  pinocchio::FrameIndex frame;
+  typename pinocchio::SE3Tpl<Scalar> jMf;
+  MatrixXs Jc;
   MatrixXs dv0_dq;
+  pinocchio::ForceTpl<Scalar> f;
+  MatrixXs df_dx;
 };
 
 }  // namespace crocoddyl

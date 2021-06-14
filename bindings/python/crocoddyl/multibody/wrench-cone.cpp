@@ -6,9 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "crocoddyl/multibody/wrench-cone.hpp"
-
 #include "python/crocoddyl/multibody/multibody.hpp"
+#include "crocoddyl/multibody/wrench-cone.hpp"
 #include "python/crocoddyl/utils/printable.hpp"
 #include "python/crocoddyl/utils/deprecate.hpp"
 

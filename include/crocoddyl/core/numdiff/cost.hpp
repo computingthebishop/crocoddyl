@@ -167,7 +167,9 @@ struct CostDataNumDiffTpl : public CostDataAbstractTpl<_Scalar> {
   using Base::Lx;
   using Base::Lxu;
   using Base::Lxx;
-  using Base::residual;
+  using Base::r;
+  using Base::Ru;
+  using Base::Rx;
   using Base::shared;
 
   VectorXs dx;  //!< State disturbance.

@@ -64,7 +64,6 @@ void CallbackVerbose::operator()(SolverAbstract& solver) {
       std::cout << solver.get_is_feasible() << '\n';
     }
   }
-  std::cout << std::flush;
 }
 
 }  // namespace crocoddyl

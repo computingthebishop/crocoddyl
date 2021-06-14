@@ -1,14 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, University of Oxford
+// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "python/crocoddyl/core/core.hpp"
 #include "python/crocoddyl/core/action-base.hpp"
-#include "python/crocoddyl/utils/printable.hpp"
 
 namespace crocoddyl {
 namespace python {
@@ -71,8 +70,6 @@ void exposeActionAbstract() {
                ":param maxiter: maximum allowed number of iterations\n"
                ":param tol: stopping tolerance criteria (default 1e-9)\n"
                ":return u: quasic-static control"))
-      .def("quasiStatic", &ActionModelAbstract_wrap::quasiStatic, &ActionModelAbstract_wrap::default_quasiStatic,
-           bp::args("self", "data", "u", "x", "maxiter", "tol"))
       .add_property(
           "nu", bp::make_function(&ActionModelAbstract_wrap::get_nu, bp::return_value_policy<bp::return_by_value>()),
           "dimension of control vector")
@@ -88,8 +85,7 @@ void exposeActionAbstract() {
       .add_property("u_lb", bp::make_function(&ActionModelAbstract_wrap::get_u_lb, bp::return_internal_reference<>()),
                     &ActionModelAbstract_wrap::set_u_lb, "lower control limits")
       .add_property("u_ub", bp::make_function(&ActionModelAbstract_wrap::get_u_ub, bp::return_internal_reference<>()),
-                    &ActionModelAbstract_wrap::set_u_ub, "upper control limits")
-      .def(PrintableVisitor<ActionModelAbstract>());
+                    &ActionModelAbstract_wrap::set_u_ub, "upper control limits");
 
   bp::register_ptr_to_python<boost::shared_ptr<ActionDataAbstract> >();
 
