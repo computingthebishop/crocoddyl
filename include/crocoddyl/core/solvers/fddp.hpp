@@ -106,7 +106,6 @@ class SolverFDDP : public SolverDDP {
   double dv_;  //!< Internal data for computing the expected improvement
 
   double th_stop_gaps_;
-  double stop_gaps_;
 
  private:
   double th_acceptnegstep_;  //!< Threshold used for accepting step along ascent direction

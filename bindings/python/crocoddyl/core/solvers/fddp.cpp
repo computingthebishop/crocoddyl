@@ -56,10 +56,7 @@ void exposeSolverFDDP() {
            "Update the expected improvement model\n\n")
       .add_property("th_acceptNegStep", bp::make_function(&SolverFDDP::get_th_acceptnegstep),
                     bp::make_function(&SolverFDDP::set_th_acceptnegstep),
-                    "threshold for step acceptance in ascent direction")
-      .add_property("th_stop_gaps", bp::make_function(&SolverFDDP::get_th_stop_gaps),
-                    bp::make_function(&SolverFDDP::set_th_stop_gaps),
-                    "threshold for stopping criteria considering gaps");
+                    "threshold for step acceptance in ascent direction");
 }
 
 }  // namespace python

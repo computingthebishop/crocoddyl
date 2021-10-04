@@ -298,11 +298,6 @@ class SolverDDP : public SolverAbstract {
    */
   void set_th_grad(const double th_grad);
 
-  /**
-   * @brief Modify the threshold for accepting a gap as non-zero
-   */
-  void set_th_gaptol(const double th_gaptol);
-
   virtual void set_stoppingCriteria(SolverDDP::StoppingType stop_type);
 
  protected:
@@ -311,8 +306,8 @@ class SolverDDP : public SolverAbstract {
   double reg_min_;        //!< Minimum allowed regularization value
   double reg_max_;        //!< Maximum allowed regularization value
 
-  double cost_try_;  //!< Total cost computed by line-search procedure
   double cost_prev_;
+  double cost_try_;                      //!< Total cost computed by line-search procedure
   std::vector<Eigen::VectorXd> xs_try_;  //!< State trajectory computed by line-search procedure
   std::vector<Eigen::VectorXd> us_try_;  //!< Control trajectory computed by line-search procedure
   std::vector<Eigen::VectorXd> dx_;
@@ -338,10 +333,8 @@ class SolverDDP : public SolverAbstract {
   std::vector<Eigen::VectorXd> Quuk_;                  //!< Quuk term
   std::vector<double> alphas_;                         //!< Set of step lengths using by the line-search procedure
   double th_grad_;     //!< Tolerance of the expected gradient used for testing the step
-  double th_gaptol_;   //!< Threshold limit to check non-zero gaps
   double th_stepdec_;  //!< Step-length threshold used to decrease regularization
   double th_stepinc_;  //!< Step-length threshold used to increase regularization
-  bool was_feasible_;  //!< Label that indicates in the previous iterate was feasible
 
   std::function<double(void)> stopping_criteria_;
   std::function<bool(void)> stopping_test_;

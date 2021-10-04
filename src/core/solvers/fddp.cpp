@@ -116,12 +116,7 @@ bool SolverFDDP::stoppingTestGaps() {
   if (was_feasible_ && stop_ < th_stop_) {
     return true;
   } else if (!was_feasible_ && stop_ < th_stop_) {
-    stop_gaps_ = 0.;
-    const std::size_t& T = this->problem_->get_T();
-    for (std::size_t t = 0; t < T; ++t) {
-      stop_gaps_ += fs_[t].norm();
-    }
-    if (stop_gaps_ < th_stop_gaps_) {
+    if (ffeas_ < th_stop_gaps_) {
       return true;
     }
   }
