@@ -11,6 +11,7 @@
 
 #include <pinocchio/multibody/fwd.hpp>
 #include <pinocchio/spatial/se3.hpp>
+#include <pinocchio/spatial/skew.hpp>
 
 #include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/core/residual-base.hpp"
@@ -23,10 +24,10 @@ namespace crocoddyl {
 /**
  * @brief Frame placement residual
  *
- * This residual function defines the frame placement tracking as \f$\mathbf{r}=\mathbf{p}\ominus\mathbf{p}^*\f$, where
- * \f$\mathbf{p},\mathbf{p}^*\in~\mathbb{SE(3)}\f$ are the current and reference frame placements, respectively. Note
- * that the dimension of the residual vector is 6. Furthermore, the Jacobians of the residual function are
- * computed analytically.
+ * This residual function defines the tracking of a frame axis as \f$\mathbf{r}=\mathbf{n}^{*\top}
+ * \mathbf{R}\mathbf{e}_{axis}\f$, where \f$\mathbf{n}^{*}, \mathbf{R}, \mathbf{e}\f$ are reference axis, the frame
+ * rotation and, the axis of the frame we want to align with the reference axis, respectively. Note that the dimension
+ * of the residual vector is 1. Furthermore, the Jacobians of the residual function are computed analytically.
  *
  * As described in `ResidualModelAbstractTpl()`, the residual value and its Jacobians are calculated by `calc` and
  * `calcDiff`, respectively.
@@ -46,30 +47,23 @@ class ResidualModelFrameAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scal
   typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
   typedef typename MathBase::VectorXs VectorXs;
-  typedef pinocchio::SE3Tpl<Scalar> SE3;
+  typedef typename MathBase::Vector3s Vector3s;
+  typedef typename MathBase::Matrix3s Matrix3s;
+  typedef typename MathBase::MatrixXs MatrixXs;
+
 
   /**
    * @brief Initialize the frame placement residual model
    *
-   * @param[in] state  State of the multibody system
-   * @param[in] id     Reference frame id
-   * @param[in] pref   Reference frame placement
-   * @param[in] nu     Dimension of the control vector
+   * @param[in] state     State of the multibody system
+   * @param[in] id        Reference frame id
+   * @param[in] axisref   Reference axis
+   * @param[in] direction 0, 1, 2 to select X, Y, Z axis from the frame to be aligned with axisref
+   * @param[in] nu        Dimension of the control vector
    */
   ResidualModelFrameAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
-                                 const SE3& pref, const std::size_t nu);
+                                     const Vector3s& axisref, const std::size_t direction, const std::size_t nu);
 
-  /**
-   * @brief Initialize the frame placement residual model
-   *
-   * The default `nu` is obtained from `StateAbstractTpl::get_nv()`.
-   *
-   * @param[in] state  State of the multibody system
-   * @param[in] id     Reference frame id
-   * @param[in] pref   Reference frame placement
-   */
-  ResidualModelFrameAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
-                                 const SE3& pref);
   virtual ~ResidualModelFrameAxisAlignmentTpl();
 
   /**
@@ -105,7 +99,7 @@ class ResidualModelFrameAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scal
   /**
    * @brief Return the reference frame placement
    */
-  const SE3& get_reference() const;
+  const Vector3s& get_reference() const;
 
   /**
    * @brief Modify the reference frame id
@@ -115,7 +109,7 @@ class ResidualModelFrameAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scal
   /**
    * @brief Modify the reference frame placement
    */
-  void set_reference(const SE3& reference);
+  void set_reference(const Vector3s& reference);
 
   /**
    * @brief Print relevant information of the frame-placement residual
@@ -132,9 +126,11 @@ class ResidualModelFrameAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scal
   using Base::v_dependent_;
 
  private:
-  pinocchio::FrameIndex id_;                                              //!< Reference frame id
-  SE3 pref_;                                                              //!< Reference frame placement
-  pinocchio::SE3Tpl<Scalar> oMf_inv_;                                     //!< Inverse reference placement
+  pinocchio::FrameIndex id_;  //!< Reference frame id
+  Vector3s axisref_;          //!< Reference axis
+  std::size_t direction_;     //!< 0,1,2 for X Y Z
+  Vector3s v_axis_frame_;
+  Matrix3s skew_axis_frame_;
   boost::shared_ptr<typename StateMultibody::PinocchioModel> pin_model_;  //!< Pinocchio model
 };
 
@@ -147,13 +143,22 @@ struct ResidualDataFrameAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scala
   typedef ResidualDataAbstractTpl<Scalar> Base;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
   typedef typename MathBase::Matrix6xs Matrix6xs;
-  typedef typename MathBase::Matrix6s Matrix6s;
-  typedef typename MathBase::Vector6s Vector6s;
+  typedef typename MathBase::Matrix3xs Matrix3xs;
+  typedef typename MathBase::MatrixX3s MatrixX3s;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::Vector3s Vector3s;
+  typedef typename MathBase::Matrix3s Matrix3s;
 
   template <template <typename Scalar> class Model>
   ResidualDataFrameAxisAlignmentTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
-      : Base(model, data), rJf(6, 6), fJf(6, model->get_state()->get_nv()) {
+      : Base(model, data), dotJvec(1, 3), rJf(3, model->get_state()->get_nv()), fJf(6, model->get_state()->get_nv()) {
     r.setZero();
+
+    dotJvec.setZero();
+    ractJrot.setZero();
+    rJf.setZero();
+    fJf.setZero();
+
     rJf.setZero();
     fJf.setZero();
     // Check that proper shared data has been passed
@@ -167,9 +172,13 @@ struct ResidualDataFrameAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scala
   }
 
   pinocchio::DataTpl<Scalar>* pinocchio;  //!< Pinocchio data
-  pinocchio::SE3Tpl<Scalar> rMf;          //!< Error frame placement of the frame
-  Matrix6s rJf;                           //!< Error Jacobian of the frame
-  Matrix6xs fJf;                          //!< Local Jacobian of the frame
+
+  Vector3s axis;
+
+  MatrixX3s dotJvec;  //!< Jacoabian of the dot product w.r.t. input vector
+  Matrix3s ractJrot;  //!< Jacobian of the rotation action w.r.t. rotation
+  Matrix3xs rJf;      //!< Local Jacobian of the frame (rotation part)
+  Matrix6xs fJf;      //!< Local Jacobian of the frame
 
   using Base::r;
   using Base::Ru;

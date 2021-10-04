@@ -13,49 +13,59 @@ namespace crocoddyl {
 
 template <typename Scalar>
 ResidualModelFrameAxisAlignmentTpl<Scalar>::ResidualModelFrameAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state,
-                                                                       const pinocchio::FrameIndex id, const SE3& pref,
-                                                                       const std::size_t nu)
-    : Base(state, 6, nu, true, false, false),
-      id_(id),
-      pref_(pref),
-      oMf_inv_(pref.inverse()),
-      pin_model_(state->get_pinocchio()) {}
+                                                                               const pinocchio::FrameIndex id,
+                                                                               const Vector3s& axisref,
+                                                                               const std::size_t direction,
+                                                                               const std::size_t nu)
+    : Base(state, 1, nu, true, false, false), id_(id), direction_(direction), pin_model_(state->get_pinocchio()) {
+  if (direction_ > 2)
+    throw_pretty("Invalid argument: "
+                 << "direction (" + std::to_string(direction_) + ") is larger than 2");
 
-template <typename Scalar>
-ResidualModelFrameAxisAlignmentTpl<Scalar>::ResidualModelFrameAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state,
-                                                                       const pinocchio::FrameIndex id, const SE3& pref)
-    : Base(state, 6, true, false, false),
-      id_(id),
-      pref_(pref),
-      oMf_inv_(pref.inverse()),
-      pin_model_(state->get_pinocchio()) {}
+  axisref_ = axisref;
+  axisref_.normalize();
+
+  switch (direction) {
+    case 0:
+      v_axis_frame_ = Vector3s::UnitX();
+      break;
+    case 1:
+      v_axis_frame_ = Vector3s::UnitY();
+      break;
+    case 2:
+      v_axis_frame_ = Vector3s::UnitZ();
+      break;
+  }
+
+  skew_axis_frame_ = pinocchio::skew(v_axis_frame_);
+}
 
 template <typename Scalar>
 ResidualModelFrameAxisAlignmentTpl<Scalar>::~ResidualModelFrameAxisAlignmentTpl() {}
 
 template <typename Scalar>
 void ResidualModelFrameAxisAlignmentTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
-                                                  const Eigen::Ref<const VectorXs>&,
-                                                  const Eigen::Ref<const VectorXs>&) {
-  Data* d = static_cast<Data*>(data.get());
-
-  // Compute the frame placement w.r.t. the reference frame
-  pinocchio::updateFramePlacement(*pin_model_.get(), *d->pinocchio, id_);
-  d->rMf = oMf_inv_ * d->pinocchio->oMf[id_];
-  data->r = pinocchio::log6(d->rMf).toVector();
-}
-
-template <typename Scalar>
-void ResidualModelFrameAxisAlignmentTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
                                                       const Eigen::Ref<const VectorXs>&,
                                                       const Eigen::Ref<const VectorXs>&) {
   Data* d = static_cast<Data*>(data.get());
 
+  // Compute the frame placement w.r.t. the reference frame
+  pinocchio::updateFramePlacement(*pin_model_.get(), *d->pinocchio, id_);
+  d->axis = d->pinocchio->oMf[id_].rotation() * v_axis_frame_;
+  data->r = axisref_.transpose() * d->axis + MatrixXs::Identity(1, 1);
+}
+
+template <typename Scalar>
+void ResidualModelFrameAxisAlignmentTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                                          const Eigen::Ref<const VectorXs>&,
+                                                          const Eigen::Ref<const VectorXs>&) {
+  Data* d = static_cast<Data*>(data.get());
+
   // Compute the derivatives of the frame placement
   const std::size_t nv = state_->get_nv();
-  pinocchio::Jlog6(d->rMf, d->rJf);
+  d->ractJrot = -d->pinocchio->oMf[id_].rotation() * skew_axis_frame_;
   pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::LOCAL, d->fJf);
-  data->Rx.leftCols(nv).noalias() = d->rJf * d->fJf;
+  data->Rx.leftCols(nv).noalias() = axisref_.transpose() * d->ractJrot * d->fJf.block(3, 0, 3, nv);
 }
 
 template <typename Scalar>
@@ -67,11 +77,8 @@ boost::shared_ptr<ResidualDataAbstractTpl<Scalar> > ResidualModelFrameAxisAlignm
 template <typename Scalar>
 void ResidualModelFrameAxisAlignmentTpl<Scalar>::print(std::ostream& os) const {
   const Eigen::IOFormat fmt(2, Eigen::DontAlignCols, ", ", ";\n", "", "", "[", "]");
-  typename SE3::Quaternion qref;
-  pinocchio::quaternion::assignQuaternion(qref, pref_.rotation());
   os << "ResidualModelFrameAxisAlignment {frame=" << pin_model_->frames[id_].name
-     << ", tref=" << pref_.translation().transpose().format(fmt) << ", qref=" << qref.coeffs().transpose().format(fmt)
-     << "}";
+     << ", tref=" << axisref_.transpose().format(fmt) << "}";
 }
 
 template <typename Scalar>
@@ -80,8 +87,8 @@ pinocchio::FrameIndex ResidualModelFrameAxisAlignmentTpl<Scalar>::get_id() const
 }
 
 template <typename Scalar>
-const pinocchio::SE3Tpl<Scalar>& ResidualModelFrameAxisAlignmentTpl<Scalar>::get_reference() const {
-  return pref_;
+const typename MathBaseTpl<Scalar>::Vector3s& ResidualModelFrameAxisAlignmentTpl<Scalar>::get_reference() const {
+  return axisref_;
 }
 
 template <typename Scalar>
@@ -90,9 +97,9 @@ void ResidualModelFrameAxisAlignmentTpl<Scalar>::set_id(const pinocchio::FrameIn
 }
 
 template <typename Scalar>
-void ResidualModelFrameAxisAlignmentTpl<Scalar>::set_reference(const SE3& placement) {
-  pref_ = placement;
-  oMf_inv_ = placement.inverse();
+void ResidualModelFrameAxisAlignmentTpl<Scalar>::set_reference(const Vector3s& reference) {
+  axisref_ = reference;
+  axisref_.normalize();
 }
 
 }  // namespace crocoddyl
