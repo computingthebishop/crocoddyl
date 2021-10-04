@@ -34,14 +34,14 @@ namespace crocoddyl {
  * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
  */
 template <typename _Scalar>
-class ResidualModelAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scalar> {
+class ResidualModelFrameAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
   typedef ResidualModelAbstractTpl<Scalar> Base;
-  typedef ResidualDataAxisAlignmentTpl<Scalar> Data;
+  typedef ResidualDataFrameAxisAlignmentTpl<Scalar> Data;
   typedef StateMultibodyTpl<Scalar> StateMultibody;
   typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
@@ -56,7 +56,7 @@ class ResidualModelAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] pref   Reference frame placement
    * @param[in] nu     Dimension of the control vector
    */
-  ResidualModelAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
+  ResidualModelFrameAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
                                  const SE3& pref, const std::size_t nu);
 
   /**
@@ -68,9 +68,9 @@ class ResidualModelAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] id     Reference frame id
    * @param[in] pref   Reference frame placement
    */
-  ResidualModelAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
+  ResidualModelFrameAxisAlignmentTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
                                  const SE3& pref);
-  virtual ~ResidualModelAxisAlignmentTpl();
+  virtual ~ResidualModelFrameAxisAlignmentTpl();
 
   /**
    * @brief Compute the frame placement residual
@@ -139,7 +139,7 @@ class ResidualModelAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scalar> {
 };
 
 template <typename _Scalar>
-struct ResidualDataAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scalar> {
+struct ResidualDataFrameAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scalar> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
@@ -151,7 +151,7 @@ struct ResidualDataAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scalar> {
   typedef typename MathBase::Vector6s Vector6s;
 
   template <template <typename Scalar> class Model>
-  ResidualDataAxisAlignmentTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
+  ResidualDataFrameAxisAlignmentTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
       : Base(model, data), rJf(6, 6), fJf(6, model->get_state()->get_nv()) {
     r.setZero();
     rJf.setZero();
@@ -182,6 +182,6 @@ struct ResidualDataAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scalar> {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
-#include "crocoddyl/multibody/residuals/frame-ax.hxx"
+#include "crocoddyl/multibody/residuals/frame-axis-alignment.hxx"
 
 #endif  // CROCODDYL_MULTIBODY_RESIDUALS_FRAME_PLACEMENT_HPP_

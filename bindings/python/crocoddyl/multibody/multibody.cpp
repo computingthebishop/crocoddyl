@@ -40,6 +40,7 @@ void exposeMultibody() {
   exposeResidualContactWrenchCone();
   exposeResidualContactControlGrav();
   exposeResidualControlGrav();
+  exposeResidualFrameAxisAlignment();
   exposeResidualFramePlacement();
   exposeResidualFrameRotation();
   exposeResidualFrameTranslation();
