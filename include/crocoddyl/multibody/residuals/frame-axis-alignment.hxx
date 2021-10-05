@@ -65,7 +65,7 @@ void ResidualModelFrameAxisAlignmentTpl<Scalar>::calcDiff(const boost::shared_pt
   const std::size_t nv = state_->get_nv();
   d->ractJrot = -d->pinocchio->oMf[id_].rotation() * skew_axis_frame_;
   pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::LOCAL, d->fJf);
-  data->Rx.leftCols(nv).noalias() = axisref_.transpose() * d->ractJrot * d->fJf.block(3, 0, 3, nv);
+  data->Rx.leftCols(nv).noalias() = axisref_.transpose() * d->ractJrot * d->fJf.template bottomRows<3>();
 }
 
 template <typename Scalar>

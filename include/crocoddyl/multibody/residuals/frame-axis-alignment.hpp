@@ -51,7 +51,6 @@ class ResidualModelFrameAxisAlignmentTpl : public ResidualModelAbstractTpl<_Scal
   typedef typename MathBase::Matrix3s Matrix3s;
   typedef typename MathBase::MatrixXs MatrixXs;
 
-
   /**
    * @brief Initialize the frame placement residual model
    *
@@ -151,16 +150,12 @@ struct ResidualDataFrameAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scala
 
   template <template <typename Scalar> class Model>
   ResidualDataFrameAxisAlignmentTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
-      : Base(model, data), dotJvec(1, 3), rJf(3, model->get_state()->get_nv()), fJf(6, model->get_state()->get_nv()) {
-    r.setZero();
-
+      : Base(model, data), dotJvec(1, 3), fJf(6, model->get_state()->get_nv()) {
+    axis.setZero();
     dotJvec.setZero();
     ractJrot.setZero();
-    rJf.setZero();
     fJf.setZero();
 
-    rJf.setZero();
-    fJf.setZero();
     // Check that proper shared data has been passed
     DataCollectorMultibodyTpl<Scalar>* d = dynamic_cast<DataCollectorMultibodyTpl<Scalar>*>(shared);
     if (d == NULL) {
@@ -173,11 +168,10 @@ struct ResidualDataFrameAxisAlignmentTpl : public ResidualDataAbstractTpl<_Scala
 
   pinocchio::DataTpl<Scalar>* pinocchio;  //!< Pinocchio data
 
-  Vector3s axis;
+  Vector3s axis;  //!< Frame vector that has to be aligned
 
   MatrixX3s dotJvec;  //!< Jacoabian of the dot product w.r.t. input vector
   Matrix3s ractJrot;  //!< Jacobian of the rotation action w.r.t. rotation
-  Matrix3xs rJf;      //!< Local Jacobian of the frame (rotation part)
   Matrix6xs fJf;      //!< Local Jacobian of the frame
 
   using Base::r;

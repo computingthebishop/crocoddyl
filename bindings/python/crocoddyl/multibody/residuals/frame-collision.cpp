@@ -18,15 +18,15 @@ void exposeResidualFrameCollision() {
   bp::class_<ResidualModelFrameCollision, bp::bases<ResidualModelAbstract>>(
       "ResidualModelFrameCollision",
       "This residual function defines the smooth 2-norm of the Euclidean distance between\n"
-      "a frame and an external object." bp::init<boost::shared_ptr<StateMultibody>, pinocchio::FrameIndex,
-                                                 Eigen::Vector3d, std::size_t, bp::optional<double>>(
-          bp::args("self", "state", "id", "xref", "nu", "eps"),
-          "Initialize the frame translation residual model.\n\n"
-          ":param state: state of the multibody system\n"
-          ":param id: reference frame id\n"
-          ":param xref: reference frame translation\n"
-          ":param nu: dimension of control vector"
-          ":param eps: smoothing factor"))
+      "a frame and an external object.",
+      bp::init<boost::shared_ptr<StateMultibody>, pinocchio::FrameIndex, Eigen::Vector3d, std::size_t,
+               bp::optional<double>>(bp::args("self", "state", "id", "xref", "nu", "eps"),
+                                     "Initialize the frame translation residual model.\n\n"
+                                     ":param state: state of the multibody system\n"
+                                     ":param id: reference frame id\n"
+                                     ":param xref: reference frame translation\n"
+                                     ":param nu: dimension of control vector"
+                                     ":param eps: smoothing factor"))
       .def<void (ResidualModelFrameCollision::*)(const boost::shared_ptr<ResidualDataAbstract>&,
                                                  const Eigen::Ref<const Eigen::VectorXd>&,
                                                  const Eigen::Ref<const Eigen::VectorXd>&)>(

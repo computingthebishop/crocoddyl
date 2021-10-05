@@ -77,11 +77,14 @@ void exposeResidualFrameAxisAlignment() {
       .add_property("pinocchio",
                     bp::make_getter(&ResidualDataFrameAxisAlignment::pinocchio, bp::return_internal_reference<>()),
                     "pinocchio data")
-      .add_property(
-          "rJf", bp::make_getter(&ResidualDataFrameAxisAlignment::rJf, bp::return_value_policy<bp::return_by_value>()),
-          "error frame placement of the frame")
-      .add_property("rJf", bp::make_getter(&ResidualDataFrameAxisAlignment::rJf, bp::return_internal_reference<>()),
-                    "error Jacobian of the frame")
+      .add_property("axis", bp::make_getter(&ResidualDataFrameAxisAlignment::axis, bp::return_internal_reference<>()),
+                    "Frame vector that has to be aligned")
+      .add_property("dotJvec",
+                    bp::make_getter(&ResidualDataFrameAxisAlignment::dotJvec, bp::return_internal_reference<>()),
+                    "Jacoabian of the dot product w.r.t. input vector")
+      .add_property("ractJrot",
+                    bp::make_getter(&ResidualDataFrameAxisAlignment::ractJrot, bp::return_internal_reference<>()),
+                    "Jacobian of the rotation action w.r.t. rotation")
       .add_property("fJf", bp::make_getter(&ResidualDataFrameAxisAlignment::fJf, bp::return_internal_reference<>()),
                     "local Jacobian of the frame");
 }
