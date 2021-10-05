@@ -7,8 +7,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef CROCODDYL_MULTIBODY_RESIDUALS_FRAME_TRANSLATION_HPP_
-#define CROCODDYL_MULTIBODY_RESIDUALS_FRAME_TRANSLATION_HPP_
+#ifndef CROCODDYL_MULTIBODY_RESIDUALS_FRAME_COLLISION_HPP_
+#define CROCODDYL_MULTIBODY_RESIDUALS_FRAME_COLLISION_HPP_
 
 #include <pinocchio/multibody/fwd.hpp>
 
