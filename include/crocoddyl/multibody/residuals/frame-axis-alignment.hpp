@@ -6,8 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef CROCODDYL_MULTIBODY_RESIDUALS_FRAME_PLACEMENT_HPP_
-#define CROCODDYL_MULTIBODY_RESIDUALS_FRAME_PLACEMENT_HPP_
+#ifndef CROCODDYL_MULTIBODY_RESIDUALS_FRAME_AXIS_ALIGNMENT_HPP_
+#define CROCODDYL_MULTIBODY_RESIDUALS_FRAME_AXIS_ALIGNMENT_HPP_
 
 #include <pinocchio/multibody/fwd.hpp>
 #include <pinocchio/spatial/se3.hpp>
