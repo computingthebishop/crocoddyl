@@ -134,6 +134,11 @@ template <typename Scalar>
 struct ResidualDataFrameAxisAlignmentTpl;
 
 template <typename Scalar>
+class ResidualModelFrameCollisionTpl;
+template <typename Scalar>
+struct ResidualDataFrameCollisionTpl;
+
+template <typename Scalar>
 class ResidualModelFramePlacementTpl;
 template <typename Scalar>
 struct ResidualDataFramePlacementTpl;
@@ -404,6 +409,8 @@ typedef ResidualModelControlGravTpl<double> ResidualModelControlGrav;
 typedef ResidualDataControlGravTpl<double> ResidualDataControlGrav;
 typedef ResidualModelFrameAxisAlignmentTpl<double> ResidualModelFrameAxisAlignment;
 typedef ResidualDataFrameAxisAlignmentTpl<double> ResidualDataFrameAxisAlignment;
+typedef ResidualModelFrameCollisionTpl<double> ResidualModelFrameCollision;
+typedef ResidualDataFrameCollisionTpl<double> ResidualDataFrameCollision;
 typedef ResidualModelFramePlacementTpl<double> ResidualModelFramePlacement;
 typedef ResidualDataFramePlacementTpl<double> ResidualDataFramePlacement;
 typedef ResidualModelFrameRotationTpl<double> ResidualModelFrameRotation;
