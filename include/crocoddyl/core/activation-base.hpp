@@ -74,21 +74,17 @@ struct ActivationDataAbstractTpl {
 
   template <template <typename Scalar> class Activation>
   explicit ActivationDataAbstractTpl(Activation<Scalar>* const activation)
-      : a_value(0.), Ar(VectorXs::Zero(activation->get_nr())), Arr(DiagonalMatrixXs(activation->get_nr())) {
-    Arr.setZero();
-  }
+      : a_value(0.),
+        Ar(VectorXs::Zero(activation->get_nr())),
+        Arr(MatrixXs::Zero(activation->get_nr(), activation->get_nr())) {}
   virtual ~ActivationDataAbstractTpl() {}
 
   Scalar a_value;
   VectorXs Ar;
-  DiagonalMatrixXs Arr;
+  MatrixXs Arr;
 
-  static MatrixXs getHessianMatrix(const ActivationDataAbstractTpl<Scalar>& data) {
-    return data.Arr.diagonal().asDiagonal();
-  }
-  static void setHessianMatrix(ActivationDataAbstractTpl<Scalar>& data, const MatrixXs& Arr) {
-    data.Arr.diagonal() = Arr.diagonal();
-  }
+  static MatrixXs getHessianMatrix(const ActivationDataAbstractTpl<Scalar>& data) { return data.Arr; }
+  static void setHessianMatrix(ActivationDataAbstractTpl<Scalar>& data, const MatrixXs& Arr) { data.Arr = Arr; }
 };
 
 }  // namespace crocoddyl
