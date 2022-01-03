@@ -62,6 +62,7 @@ void exposeSolverFDDP();
 void exposeSolverBoxQP();
 void exposeSolverBoxDDP();
 void exposeSolverBoxFDDP();
+void exposeSolverIpOpt();
 void exposeCallbacks();
 void exposeStopWatch();
 
