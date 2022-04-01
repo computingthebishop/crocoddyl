@@ -17,9 +17,11 @@ void exposeMultibody() {
   exposeWrenchCone();
   exposeCoPSupport();
   exposeStateMultibody();
+  exposeStateMultibodyActuated(); 
   exposeActuationFloatingBase();
   exposeActuationFull();
   exposeActuationModelMultiCopterBase();
+  exposeActuationModelMultiCopterBaseFos(); 
   exposeForceAbstract();
   exposeContactAbstract();
   exposeImpulseAbstract();
