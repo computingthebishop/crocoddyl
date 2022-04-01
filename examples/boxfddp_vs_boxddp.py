@@ -10,7 +10,7 @@ from crocoddyl.utils.quadruped import SimpleQuadrupedalGaitProblem, plotSolution
 
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
-
+WITHDISPLAY = True
 # Loading the anymal model
 anymal = example_robot_data.load('anymal')
 lims = anymal.model.effortLimit

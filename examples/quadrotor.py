@@ -8,6 +8,7 @@ import example_robot_data
 
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
+WITHDISPLAY = True
 
 hector = example_robot_data.load('hector')
 robot_model = hector.model
@@ -15,12 +16,18 @@ robot_model = hector.model
 target_pos = np.array([1., 0., 1.])
 target_quat = pinocchio.Quaternion(1., 0., 0., 0.)
 
-state = crocoddyl.StateMultibody(robot_model)
+state = crocoddyl.StateMultibody(robot_model) # create state model from pinocchio model
 
-d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., 0.1
-tau_f = np.array([[0., 0., 0., 0.], [0., 0., 0., 0.], [1., 1., 1., 1.], [0., d_cog, 0., -d_cog],
-                  [-d_cog, 0., d_cog, 0.], [-cm / cf, cm / cf, -cm / cf, cm / cf]])
-actuation = crocoddyl.ActuationModelMultiCopterBase(state, tau_f)
+d_cog, cf, cm = 0.1525, 6.6e-5, 1e-6
+tau_f = np.array([[0., 0., 0., 0.], 
+                  [0., 0., 0., 0.], 
+                  [1., 1., 1., 1.], 
+                  [0., d_cog, 0., -d_cog],
+                  [-d_cog, 0., d_cog, 0.], 
+                  [-cm / cf, cm / cf, -cm / cf, cm / cf]])
+                  
+#actuation = crocoddyl.ActuationModelMultiCopterBase(state, tau_f)
+actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f) # using custom actuator class
 
 nu = actuation.nu
 runningCostModel = crocoddyl.CostModelSum(state, nu)
