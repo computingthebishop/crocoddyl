@@ -24,6 +24,9 @@ class ActuationModelFullTpl;
 template <typename Scalar>
 class ActuationModelMultiCopterBaseTpl;
 
+template <typename Scalar>
+class ActuationModelMultiCopterBaseFosTpl;
+
 // force
 template <typename Scala>
 struct ForceDataAbstractTpl;
@@ -314,6 +317,9 @@ class CoPSupportTpl;
 template <typename Scalar>
 class StateMultibodyTpl;
 
+template <typename Scalar>
+class StateMultibodyActuatedTpl;
+
 // data collector
 template <typename Scalar>
 struct DataCollectorMultibodyTpl;
@@ -359,6 +365,7 @@ struct ImpulseDataMultipleTpl;
 typedef ActuationModelFloatingBaseTpl<double> ActuationModelFloatingBase;
 typedef ActuationModelFullTpl<double> ActuationModelFull;
 typedef ActuationModelMultiCopterBaseTpl<double> ActuationModelMultiCopterBase;
+typedef ActuationModelMultiCopterBaseFosTpl<double> ActuationModelMultiCopterBaseFos;
 
 typedef ForceDataAbstractTpl<double> ForceDataAbstract;
 
@@ -500,6 +507,7 @@ typedef ContactModel6DTpl<double> ContactModel6D;
 typedef ContactData6DTpl<double> ContactData6D;
 
 typedef StateMultibodyTpl<double> StateMultibody;
+typedef StateMultibodyActuatedTpl<double> StateMultibodyActuated;
 
 typedef DataCollectorMultibodyTpl<double> DataCollectorMultibody;
 typedef DataCollectorActMultibodyTpl<double> DataCollectorActMultibody;
