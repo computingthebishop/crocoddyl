@@ -265,6 +265,16 @@ class StateAbstractTpl {
    * @brief Indicate if the state has defined limits
    */
   bool get_has_limits() const;
+  
+  /**
+   * @brief Modify the dimension of the configuration tuple
+   */
+  void set_nq(const std::size_t nq);
+
+  /**
+   * @brief Modify the dimension of tangent space of the configuration manifold
+   */
+  void set_nv(const std::size_t nv);
 
   /**
    * @brief Modify the state lower bound

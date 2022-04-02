@@ -6,6 +6,7 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 #include "crocoddyl/core/mathbase.hpp"
+#include <iostream>
 
 namespace crocoddyl {
 template <typename Scalar>
@@ -133,6 +134,18 @@ const typename MathBaseTpl<Scalar>::VectorXs& StateAbstractTpl<Scalar>::get_ub()
 template <typename Scalar>
 bool StateAbstractTpl<Scalar>::get_has_limits() const {
   return has_limits_;
+}
+
+template <typename Scalar>
+void StateAbstractTpl<Scalar>::set_nq(const std::size_t nq) {
+  std::cout << "Setting nq to: " << nq << std::endl;
+  nq_ = nq;
+}
+
+template <typename Scalar>
+void StateAbstractTpl<Scalar>::set_nv(const std::size_t nv) {
+  std::cout << "Setting nv to: " << nv << std::endl;
+  nv_ = nv;
 }
 
 template <typename Scalar>

@@ -96,9 +96,14 @@ void exposeStateAbstract() {
       .add_property("nx", bp::make_function(&StateAbstract_wrap::get_nx), "dimension of state tuple")
       .add_property("ndx", bp::make_function(&StateAbstract_wrap::get_ndx),
                     "dimension of the tangent space of the state manifold")
-      .add_property("nq", bp::make_function(&StateAbstract_wrap::get_nq), "dimension of the configuration tuple")
-      .add_property("nv", bp::make_function(&StateAbstract_wrap::get_nv),
-                    "dimension of tangent space of the configuration manifold")
+      .add_property(
+           "nq", 
+           bp::make_function(&StateAbstract_wrap::get_nq, bp::return_value_policy<bp::return_by_value>()),
+           bp::make_function(&StateAbstract_wrap::set_nq), "dimension of the configuration tuple")
+      .add_property(
+           "nv", 
+           bp::make_function(&StateAbstract_wrap::get_nv, bp::return_value_policy<bp::return_by_value>()),
+           bp::make_function(&StateAbstract_wrap::set_nv), "dimension of tangent space of the configuration manifold")
       .add_property("has_limits", bp::make_function(&StateAbstract_wrap::get_has_limits),
                     "indicates whether problem has finite state limits")
       .add_property("lb", bp::make_getter(&StateAbstract_wrap::lb_, bp::return_internal_reference<>()),
