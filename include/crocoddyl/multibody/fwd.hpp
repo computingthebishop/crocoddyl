@@ -317,8 +317,8 @@ class CoPSupportTpl;
 template <typename Scalar>
 class StateMultibodyTpl;
 
-template <typename Scalar>
-class StateMultibodyActuatedTpl;
+//template <typename Scalar>
+//class StateMultibodyActuatedTpl;
 
 // data collector
 template <typename Scalar>
@@ -507,7 +507,7 @@ typedef ContactModel6DTpl<double> ContactModel6D;
 typedef ContactData6DTpl<double> ContactData6D;
 
 typedef StateMultibodyTpl<double> StateMultibody;
-typedef StateMultibodyActuatedTpl<double> StateMultibodyActuated;
+//typedef StateMultibodyActuatedTpl<double> StateMultibodyActuated;
 
 typedef DataCollectorMultibodyTpl<double> DataCollectorMultibody;
 typedef DataCollectorActMultibodyTpl<double> DataCollectorActMultibody;
