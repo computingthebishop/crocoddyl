@@ -20,7 +20,7 @@ void exposeFrictionCone();
 void exposeWrenchCone();
 void exposeCoPSupport();
 void exposeStateMultibody();
-void exposeStateMultibodyActuated();
+//void exposeStateMultibodyActuated();
 void exposeActuationFloatingBase();
 void exposeActuationFull();
 void exposeActuationModelMultiCopterBase();
