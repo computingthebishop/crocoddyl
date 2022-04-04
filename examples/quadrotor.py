@@ -8,9 +8,9 @@ import example_robot_data
 
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
-WITHPLOT = True
-#ACTUATOR = True
-ACTUATOR = False
+WITHDISPLAY = True
+ACTUATOR = True
+#ACTUATOR = False
 
 hector = example_robot_data.load('hector')
 robot_model = hector.model
@@ -42,9 +42,12 @@ terminalCostModel = crocoddyl.CostModelSum(state, nu)
 # Costs
 xResidual = crocoddyl.ResidualModelState(state, state.zero(), nu)
 if (ACTUATOR):  
-    xActivation = crocoddyl.ActivationModelWeightedQuad(np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv + [0.0] * rotors))
+    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv + [0.0] * rotors)  # x y z vx vy vz rx ry rz vrx vry vrz w1 w2 w3 w4
 else:
-    xActivation = crocoddyl.ActivationModelWeightedQuad(np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv))
+    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv)                   # x y z vx vy vz rx ry rz vrx vry vrz
+xActivation = crocoddyl.ActivationModelWeightedQuad(weights)
+
+
 uResidual = crocoddyl.ResidualModelControl(state, nu)
 xRegCost = crocoddyl.CostModelResidual(state, xActivation, xResidual)
 uRegCost = crocoddyl.CostModelResidual(state, uResidual)

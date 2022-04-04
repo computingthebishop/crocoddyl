@@ -60,7 +60,7 @@ typename MathBaseTpl<Scalar>::VectorXs StateMultibodyActuatedTpl<Scalar>::rand()
 template <typename Scalar>
 void StateMultibodyActuatedTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x0, const Eigen::Ref<const VectorXs>& x1,
                                      Eigen::Ref<VectorXs> dxout) const {
-  //std::cout<< "[StateMultibodyActuatedTpl::diff]" << std::endl;
+  // std::cout<< "[StateMultibodyActuatedTpl::diff]" << std::endl;
   if (static_cast<std::size_t>(x0.size()) != nx_) {
     throw_pretty("Invalid argument: "
                  << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
@@ -75,7 +75,9 @@ void StateMultibodyActuatedTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x
   }
 
   pinocchio::difference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), dxout.head(nv_));
-  dxout.tail(nv_) = x1.tail(nv_) - x0.tail(nv_);
+  //dxout.tail(nv_) = x1.tail(nv_) - x0.tail(nv_);
+  dxout.segment(nq_,nv_) = x1.segment(nq_,nv_) - x0.segment(nq_,nv_);
+  dxout.tail(nr_) = x1.tail(nr_) - x0.tail(nr_);
 }
 
 template <typename Scalar>
@@ -96,7 +98,9 @@ void StateMultibodyActuatedTpl<Scalar>::integrate(const Eigen::Ref<const VectorX
   }
 
   pinocchio::integrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), xout.head(nq_));
-  xout.tail(nv_) = x.tail(nv_) + dx.tail(nv_);
+  //xout.tail(nv_) = x.tail(nv_) + dx.tail(nv_);
+  xout.segment(nq_,nv_) = x.segment(nq_,nv_) + dx.segment(nq_,nv_);
+  xout.tail(nr_) = x.tail(nr_) + dx.tail(nr_);
 }
 
 template <typename Scalar>
@@ -123,7 +127,9 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
 
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jfirst.topLeftCorner(nv_, nv_),
                            pinocchio::ARG0);
-    Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
+    //Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
+    Jfirst.block(nv_,nv_,nv_,nv_).diagonal().array() = (Scalar)-1;
+    Jfirst.bottomRightCorner(nr_, nr_).diagonal().array() = (Scalar)-1;
   } else if (firstsecond == second) {
     if (static_cast<std::size_t>(Jsecond.rows()) != ndx_ || static_cast<std::size_t>(Jsecond.cols()) != ndx_) {
       throw_pretty("Invalid argument: "
@@ -132,7 +138,9 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
     }
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jsecond.topLeftCorner(nv_, nv_),
                            pinocchio::ARG1);
-    Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+    //Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+    Jsecond.block(nv_,nv_,nv_,nv_).diagonal().array() = (Scalar)-1;
+    Jsecond.bottomRightCorner(nr_, nr_).diagonal().array() = (Scalar)-1;
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
       throw_pretty("Invalid argument: "
@@ -148,8 +156,12 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
                            pinocchio::ARG0);
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jsecond.topLeftCorner(nv_, nv_),
                            pinocchio::ARG1);
-    Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
-    Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+    //Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
+    Jfirst.block(nv_,nv_,nv_,nv_).diagonal().array() = (Scalar)-1;
+    Jfirst.bottomRightCorner(nr_, nr_).diagonal().array() = (Scalar)-1;
+    //Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+    Jsecond.block(nv_,nv_,nv_,nv_).diagonal().array() = (Scalar)-1;
+    Jsecond.bottomRightCorner(nr_, nr_).diagonal().array() = (Scalar)-1;
   }
 }
 
@@ -170,17 +182,23 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jfirst.topLeftCorner(nv_, nv_),
                               pinocchio::ARG0, pinocchio::SETTO);
-        Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+        //Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+        Jfirst.block(nv_,nv_,nv_,nv_).diagonal().array() = (Scalar)-1;
+        Jfirst.bottomRightCorner(nr_, nr_).diagonal().array() = (Scalar)-1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jfirst.topLeftCorner(nv_, nv_),
                               pinocchio::ARG0, pinocchio::ADDTO);
-        Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
+        //Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
+        Jfirst.block(nv_,nv_,nv_,nv_).diagonal().array() += (Scalar)-1;
+        Jfirst.bottomRightCorner(nr_, nr_).diagonal().array() += (Scalar)-1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jfirst.topLeftCorner(nv_, nv_),
                               pinocchio::ARG0, pinocchio::RMTO);
-        Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
+        //Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
+        Jfirst.block(nv_,nv_,nv_,nv_).diagonal().array() -= (Scalar)-1;
+        Jfirst.bottomRightCorner(nr_, nr_).diagonal().array() -= (Scalar)-1;
         break;
       default:
         throw_pretty("Invalid argument: allowed operators: setto, addto, rmfrom");
@@ -197,17 +215,23 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::SETTO);
-        Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+        //Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+        Jsecond.block(nv_,nv_,nv_,nv_).diagonal().array() = (Scalar)-1;
+        Jsecond.bottomRightCorner(nr_, nr_).diagonal().array() = (Scalar)-1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::ADDTO);
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
+        Jsecond.block(nv_,nv_,nv_,nv_).diagonal().array() += (Scalar)-1;
+        Jsecond.bottomRightCorner(nr_, nr_).diagonal().array() += (Scalar)-1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::RMTO);
-        Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
+        //Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
+        Jsecond.block(nv_,nv_,nv_,nv_).diagonal().array() -= (Scalar)-1;
+        Jsecond.bottomRightCorner(nr_, nr_).diagonal().array() -= (Scalar)-1;
         break;
       default:
         throw_pretty("Invalid argument: allowed operators: setto, addto, rmfrom");
