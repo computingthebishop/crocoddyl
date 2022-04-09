@@ -9,6 +9,7 @@ import example_robot_data
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
 WITHDISPLAY = True
+WITHPLOT = True
 ACTUATOR = True
 #ACTUATOR = False
 
@@ -42,7 +43,7 @@ terminalCostModel = crocoddyl.CostModelSum(state, nu)
 # Costs
 xResidual = crocoddyl.ResidualModelState(state, state.zero(), nu)
 if (ACTUATOR):  
-    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv + [0.0] * rotors)  # x y z vx vy vz rx ry rz vrx vry vrz w1 w2 w3 w4
+    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv + [0.01] * rotors)  # x y z vx vy vz rx ry rz vrx vry vrz w1 w2 w3 w4
 else:
     weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv)                   # x y z vx vy vz rx ry rz vrx vry vrz
 xActivation = crocoddyl.ActivationModelWeightedQuad(weights)

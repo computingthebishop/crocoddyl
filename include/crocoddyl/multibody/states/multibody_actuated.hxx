@@ -222,7 +222,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::ADDTO);
-        Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
+        //Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
         Jsecond.block(nv_,nv_,nv_,nv_).diagonal().array() += (Scalar)-1;
         Jsecond.bottomRightCorner(nr_, nr_).diagonal().array() += (Scalar)-1;
         break;
