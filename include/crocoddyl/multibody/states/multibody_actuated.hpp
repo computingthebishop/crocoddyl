@@ -15,6 +15,8 @@
 #include "crocoddyl/multibody/states/multibody.hpp"
 #include "crocoddyl/core/state-base.hpp"
 
+#include <math.h>  
+
 namespace crocoddyl {
 
 /**
@@ -94,7 +96,7 @@ class StateMultibodyActuatedTpl : public StateMultibodyTpl<_Scalar> {
  private:
   boost::shared_ptr<PinocchioModel> pinocchio_;  //!< Pinocchio model
   VectorXs x0_;                                  //!< Zero state
-  std::size_t nr_;
+  std::size_t nr_;                               //!< number of rotors
 };
 
 }  // namespace crocoddyl

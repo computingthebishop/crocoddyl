@@ -9,7 +9,7 @@ import example_robot_data
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
 WITHDISPLAY = True
-WITHPLOT = True
+WITHPLOT = False
 ACTUATOR = True
 #ACTUATOR = False
 
@@ -20,7 +20,7 @@ target_pos = np.array([1., 0., 1.])
 target_quat = pinocchio.Quaternion(1., 0., 0., 0.)
 
 if (ACTUATOR):
-    rotors = 4  
+    rotors = 0
     state = crocoddyl.StateMultibodyActuated(robot_model,rotors) # create state model from pinocchio model
 else:
     state = crocoddyl.StateMultibody(robot_model) # create state model from pinocchio model
@@ -43,9 +43,10 @@ terminalCostModel = crocoddyl.CostModelSum(state, nu)
 # Costs
 xResidual = crocoddyl.ResidualModelState(state, state.zero(), nu)
 if (ACTUATOR):  
-    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv + [0.01] * rotors)  # x y z vx vy vz rx ry rz vrx vry vrz w1 w2 w3 w4
+    #weights = np.array(([0.1] * 3) + ([1000.] * 3) + ([0.01] * 2 * rotors) + ([1000.] * robot_model.nv) + ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
+    weights = np.array(([0.1] * 3) + ([1000.] * 3) + ([0.01] * rotors) + ([1000.] * robot_model.nv) + ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
 else:
-    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv)                   # x y z vx vy vz rx ry rz vrx vry vrz
+    weights = np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv)                   # x y z rx ry rz   vx vy vz vrx vry vrz
 xActivation = crocoddyl.ActivationModelWeightedQuad(weights)
 
 
