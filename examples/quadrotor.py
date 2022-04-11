@@ -61,6 +61,8 @@ runningCostModel.addCost("uReg", uRegCost, 1e-6)
 runningCostModel.addCost("trackPose", goalTrackingCost, 1e-2)
 terminalCostModel.addCost("goalPose", goalTrackingCost, 3.)
 
+crocoddyl.DifferentialActionModelFreeFwdDynamicsActuated(state, actuation, runningCostModel)
+
 dt = 3e-2
 runningModel = crocoddyl.IntegratedActionModelEuler(
     crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, runningCostModel), dt)

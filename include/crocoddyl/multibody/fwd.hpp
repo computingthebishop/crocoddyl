@@ -54,6 +54,9 @@ class DifferentialActionModelContactFwdDynamicsTpl;
 template <typename Scalar>
 struct DifferentialActionDataContactFwdDynamicsTpl;
 
+template <typename Scalar>
+class DifferentialActionModelFreeFwdDynamicsActuatedTpl;
+
 // numdiff
 template <typename Scalar>
 class CostModelNumDiffTpl;
@@ -379,6 +382,7 @@ typedef DifferentialActionModelFreeFwdDynamicsTpl<double> DifferentialActionMode
 typedef DifferentialActionDataFreeFwdDynamicsTpl<double> DifferentialActionDataFreeFwdDynamics;
 typedef DifferentialActionModelContactFwdDynamicsTpl<double> DifferentialActionModelContactFwdDynamics;
 typedef DifferentialActionDataContactFwdDynamicsTpl<double> DifferentialActionDataContactFwdDynamics;
+typedef DifferentialActionModelFreeFwdDynamicsActuatedTpl<double> DifferentialActionModelFreeFwdDynamicsActuated;
 
 typedef CostModelNumDiffTpl<double> CostModelNumDiff;
 typedef CostDataNumDiffTpl<double> CostDataNumDiff;
