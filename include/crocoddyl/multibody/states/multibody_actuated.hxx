@@ -153,7 +153,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
 
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG0);
-    Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)1;      //wrt x0
+    Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
     Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
     // std::cout<< "Jacobian first" << std::endl;
     // std::cout<< Jfirst << std::endl;
@@ -165,7 +165,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
     }
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
-    Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
+    Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)1;     //wrt x1
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian second" << std::endl;
     // std::cout<< Jsecond << std::endl;
@@ -184,9 +184,9 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
                            pinocchio::ARG0);
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
-    Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)1;      //wrt x0
+    Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
     Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
-    Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
+    Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian both" << std::endl;
     // std::cout<< Jfirst << std::endl;
@@ -273,10 +273,10 @@ void StateMultibodyActuatedTpl<Scalar>::JintegrateTransport(const Eigen::Ref<con
 
   switch (firstsecond) {
     case first:
-      pinocchio::dIntegrateTransport(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jin.topRows(nv_), pinocchio::ARG0);
+      pinocchio::dIntegrateTransport(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jin.topRows(nv_-nr_), pinocchio::ARG0);
       break;
     case second:
-      pinocchio::dIntegrateTransport(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jin.topRows(nv_), pinocchio::ARG1);
+      pinocchio::dIntegrateTransport(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jin.topRows(nv_-nr_), pinocchio::ARG1);
       break;
     default:
       throw_pretty(
