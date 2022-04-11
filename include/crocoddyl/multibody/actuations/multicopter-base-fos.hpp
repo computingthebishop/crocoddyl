@@ -54,7 +54,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
    * @param[in] tau_f  Matrix that maps the thrust of each propeller to the net force and torque
    */
   ActuationModelMultiCopterBaseFosTpl(boost::shared_ptr<StateMultibody> state, const Eigen::Ref<const Matrix6xs>& tau_f)
-      : Base(state, state->get_nv() - 6 + tau_f.cols()), n_rotors_(tau_f.cols()) {
+      : Base(state, tau_f.cols()), n_rotors_(tau_f.cols()) {
     pinocchio::JointModelFreeFlyerTpl<Scalar> ff_joint;
     if (state->get_pinocchio()->joints[1].shortname() != ff_joint.shortname()) {
       throw_pretty("Invalid argument: "
