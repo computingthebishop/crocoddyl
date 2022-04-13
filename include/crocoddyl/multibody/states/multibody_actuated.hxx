@@ -290,4 +290,9 @@ const boost::shared_ptr<pinocchio::ModelTpl<Scalar> >& StateMultibodyActuatedTpl
   return pinocchio_;
 }
 
+template <typename Scalar>
+std::size_t StateMultibodyActuatedTpl<Scalar>::get_nrotors() const {
+  return nr_;
+}
+
 }  // namespace crocoddyl

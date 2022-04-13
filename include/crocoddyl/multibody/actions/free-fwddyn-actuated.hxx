@@ -55,15 +55,25 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
 
+  std::size_t number_rotors = u.rows();
   Data* d = static_cast<Data*>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(state_->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq()-(2*number_rotors));
+  //const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(state_->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv()-number_rotors);
 
-  actuation_->calc(d->multibody.actuation, x, u);
+  actuation_->calc(d->multibody.actuation, x, u); //take the current state + the integration time to produce the future torque 
 
   // Computing the dynamics using ABA or manually for armature case
   if (without_armature_) {
-    d->xout = pinocchio::aba(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau);
+    try
+    {
+      d->xout = pinocchio::aba(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << "Error running ABA" << '\n';
+      std::cerr << e.what() << '\n';
+    }
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
     pinocchio::computeAllTerms(pinocchio_, d->pinocchio, q, v);
@@ -76,7 +86,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   }
 
   // Computing the cost value and residuals
-  costs_->calc(d->costs, x, u);
+  costs_->calc(d->costs, x, u); //also giving error
   d->cost = d->costs->cost;
 }
 

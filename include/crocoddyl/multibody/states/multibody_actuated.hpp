@@ -84,6 +84,11 @@ class StateMultibodyActuatedTpl : public StateMultibodyTpl<_Scalar> {
    */
   const boost::shared_ptr<PinocchioModel>& get_pinocchio() const;
 
+  /**
+   * @brief Return the number of rotors
+   */
+  std::size_t get_nrotors() const;
+
  protected:
   using Base::has_limits_;
   using Base::lb_;

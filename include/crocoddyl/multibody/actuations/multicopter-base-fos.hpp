@@ -61,7 +61,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
                    << "the first joint has to be free-flyer");
     }
 
-    tau_f_ = MatrixXs::Zero(state_->get_nv(), nu_);
+    tau_f_ = MatrixXs::Zero(state_->get_nv()-nu_, nu_);
     tau_f_.block(0, 0, 6, n_rotors_) = tau_f;
     if (nu_ > n_rotors_) {
       tau_f_.bottomRightCorner(nu_ - n_rotors_, nu_ - n_rotors_).diagonal().setOnes();
