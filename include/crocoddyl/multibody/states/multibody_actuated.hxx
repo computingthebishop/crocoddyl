@@ -74,7 +74,7 @@ void StateMultibodyActuatedTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x
                  << "dxout has wrong dimension (it should be " + std::to_string(ndx_) + ")");
   }
 
-  pinocchio::difference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), dxout.head(nv_));
+  pinocchio::difference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), dxout.head(nv_-nr_));
   for (std::size_t i = 0; i < nr_; i++)
   {
     // Conjugate of x0
@@ -110,14 +110,14 @@ void StateMultibodyActuatedTpl<Scalar>::integrate(const Eigen::Ref<const VectorX
                  << "xout has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
 
-  pinocchio::integrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-(2*nr_)), xout.head(nq_-(2*nr_)));
+  pinocchio::integrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), xout.head(nq_-(2*nr_)));
   for (std::size_t i = 0; i < nr_; i++)
   {
     // Manifold point x
     Scalar a = x(nq_-(2*nr_)+(i*2));
     Scalar b = x(nq_-(2*nr_)+(i*2)+1);
     // Exp map of tangent space vector
-    Scalar theta = dx(nq_-(2*nr_)+i);
+    Scalar theta = dx(nq_-nr_+i);
     Scalar c = cos(theta);
     Scalar d = sin(theta);
     // Product between x and exp map of dx
@@ -153,7 +153,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
 
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG0);
-    Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
+    Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
     Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
     // std::cout<< "Jacobian first" << std::endl;
     // std::cout<< Jfirst << std::endl;
@@ -165,7 +165,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
     }
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
-    Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)1;     //wrt x1
+    Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;     //wrt x1
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian second" << std::endl;
     // std::cout<< Jsecond << std::endl;
@@ -184,8 +184,8 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
                            pinocchio::ARG0);
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
-    Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
-    Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
+    Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
+    Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
     Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian both" << std::endl;
@@ -211,19 +211,19 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG0, pinocchio::SETTO);
-        Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)1;
+        Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;
         Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG0, pinocchio::ADDTO);
-        Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() += (Scalar)1;
+        Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() += (Scalar)1;
         Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG0, pinocchio::RMTO);
-        Jfirst.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() -= (Scalar)1;
+        Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() -= (Scalar)1;
         Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
         break;
       default:
@@ -241,19 +241,19 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG1, pinocchio::SETTO);
-        Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() = (Scalar)1;
+        Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG1, pinocchio::ADDTO);
-        Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() += (Scalar)1;
+        Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() += (Scalar)1;
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG1, pinocchio::RMTO);
-        Jsecond.block(nq_-(2*nr_),nq_-(2*nr_),nr_,nr_).diagonal().array() -= (Scalar)1;
+        Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() -= (Scalar)1;
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
         break;
       default:
