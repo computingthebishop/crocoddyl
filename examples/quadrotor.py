@@ -8,7 +8,7 @@ import example_robot_data
 
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
-WITHDISPLAY = True
+WITHDISPLAY = False
 WITHPLOT = False
 ACTUATOR = True
 #ACTUATOR = False
@@ -20,7 +20,7 @@ target_pos = np.array([1., 0., 1.])
 target_quat = pinocchio.Quaternion(1., 0., 0., 0.)
 
 if (ACTUATOR):
-    rotors = 0
+    rotors = 4
     state = crocoddyl.StateMultibodyActuated(robot_model,rotors) # create state model from pinocchio model
 else:
     state = crocoddyl.StateMultibody(robot_model) # create state model from pinocchio model
@@ -53,7 +53,11 @@ xActivation = crocoddyl.ActivationModelWeightedQuad(weights)
 uResidual = crocoddyl.ResidualModelControl(state, nu)
 xRegCost = crocoddyl.CostModelResidual(state, xActivation, xResidual)
 uRegCost = crocoddyl.CostModelResidual(state, uResidual)
-goalTrackingResidual = crocoddyl.ResidualModelFramePlacement(state, robot_model.getFrameId("base_link"),
+if (ACTUATOR):  
+    goalTrackingResidual = crocoddyl.ResidualModelFramePlacementAugmented(state, robot_model.getFrameId("base_link"),
+                                                             pinocchio.SE3(target_quat.matrix(), target_pos), nu)
+else:
+    goalTrackingResidual = crocoddyl.ResidualModelFramePlacement(state, robot_model.getFrameId("base_link"),
                                                              pinocchio.SE3(target_quat.matrix(), target_pos), nu)
 goalTrackingCost = crocoddyl.CostModelResidual(state, goalTrackingResidual)
 runningCostModel.addCost("xReg", xRegCost, 1e-6)
@@ -72,9 +76,10 @@ terminalModel = crocoddyl.IntegratedActionModelEuler(
 # Creating the shooting problem and the FDDP solver
 T = 33
 if (ACTUATOR):  
-    problem = crocoddyl.ShootingProblem(np.concatenate([hector.q0, np.zeros(state.nv), np.zeros(rotors)]), [runningModel] * T, terminalModel)
+    initial_state = np.concatenate([hector.q0, np.zeros(rotors*2), np.zeros(state.nv)])
 else:
-    problem = crocoddyl.ShootingProblem(np.concatenate([hector.q0, np.zeros(state.nv)]), [runningModel] * T, terminalModel)
+    initial_state = np.concatenate([hector.q0, np.zeros(state.nv)])
+problem = crocoddyl.ShootingProblem(initial_state, [runningModel] * T, terminalModel)
 solver = crocoddyl.SolverFDDP(problem)
 
 solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])

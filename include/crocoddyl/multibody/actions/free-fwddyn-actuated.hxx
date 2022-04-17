@@ -37,6 +37,7 @@ DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::DifferentialActionMod
   }
   Base::set_u_lb(Scalar(-1.) * pinocchio_.effortLimit.tail(nu_));
   Base::set_u_ub(Scalar(+1.) * pinocchio_.effortLimit.tail(nu_));
+  n_rotors_ = nu_;
 }
 
 template <typename Scalar>
@@ -55,27 +56,31 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
 
-  std::size_t number_rotors = u.rows();
   Data* d = static_cast<Data*>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq()-(2*number_rotors));
-  //const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(state_->get_nv());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv()-number_rotors);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq()-(2*n_rotors_));
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv()-n_rotors_);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> rotors_v = x.tail(n_rotors_);
 
-  actuation_->calc(d->multibody.actuation, x, u); //take the current state + the integration time to produce the future torque 
+  actuation_->calc(d->multibody.actuation, x, u);
 
   // Computing the dynamics using ABA or manually for armature case
   if (without_armature_) {
     try
     {
-      d->xout = pinocchio::aba(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau);
+      d->xout.head(state_->get_nv()-n_rotors_) = pinocchio::aba(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau);
     }
     catch(const std::exception& e)
     {
       std::cerr << "Error running ABA" << '\n';
       std::cerr << e.what() << '\n';
     }
+    // compute FO system acceleration
+    d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
+    //d->xout.tail(n_rotors_) = (u - rotors_v)/time_ct; // TODO use this implementation
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
+    std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
+    exit(1);
     pinocchio::computeAllTerms(pinocchio_, d->pinocchio, q, v);
     d->pinocchio.M.diagonal() += armature_;
     pinocchio::cholesky::decompose(pinocchio_, d->pinocchio);
@@ -86,7 +91,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   }
 
   // Computing the cost value and residuals
-  costs_->calc(d->costs, x, u); //also giving error
+  costs_->calc(d->costs, x, u);
   d->cost = d->costs->cost;
 }
 
@@ -99,8 +104,8 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   }
 
   Data* d = static_cast<Data*>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(state_->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq()-(2*n_rotors_));
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv()-n_rotors_);
 
   pinocchio::computeAllTerms(pinocchio_, d->pinocchio, q, v);
 
@@ -122,20 +127,46 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
   }
 
   const std::size_t nv = state_->get_nv();
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(nv);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq()-(2*n_rotors_));
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv()-n_rotors_);
 
   Data* d = static_cast<Data*>(data.get());
 
   actuation_->calcDiff(d->multibody.actuation, x, u);
 
-  // Computing the dynamics derivatives
+  // Computing the dynamics derivatives  
   if (without_armature_) {
-    pinocchio::computeABADerivatives(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau, d->Fx.leftCols(nv),
-                                     d->Fx.rightCols(nv), d->pinocchio.Minv);
-    d->Fx.noalias() += d->pinocchio.Minv * d->multibody.actuation->dtau_dx;
-    d->Fu.noalias() = d->pinocchio.Minv * d->multibody.actuation->dtau_du;
+    Eigen::MatrixXd tempFx(nv-n_rotors_,(nv-n_rotors_)*2); //create temporal jacobian of the dinamics to obtain values from pinocchio::computeABADerivatives
+    //dtau_dx(model->get_state()->get_nv(), model->get_state()->get_ndx()) is initialized in ActuationModelAbstractTpl
+    Eigen::MatrixXd temp_dtau_dx(nv-n_rotors_,state_->get_ndx()-(n_rotors_*2)); //create temporal jacobian of the dinamics to compute partially Fu
+
+    pinocchio::computeABADerivatives(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau, tempFx.leftCols(nv-n_rotors_),
+                                     tempFx.rightCols(nv-n_rotors_), d->pinocchio.Minv); 
+                                     
+    // assing values of d->multibody.actuation->dtau_dx to the temporal matrix
+    temp_dtau_dx.leftCols(nv-n_rotors_) = d->multibody.actuation->dtau_dx.block(0,0,nv-n_rotors_,nv-n_rotors_);
+    temp_dtau_dx.rightCols(nv-n_rotors_) = d->multibody.actuation->dtau_dx.block(0,nv-n_rotors_,nv-n_rotors_,nv-n_rotors_);
+
+    // compute partial Fx
+    tempFx += d->pinocchio.Minv * temp_dtau_dx;
+    // Assign partial Fx to d->Fx section
+    // derivatives of drone dynamics 
+    d->Fx.block(0,0,nv-n_rotors_,nv-n_rotors_) = tempFx.leftCols(nv-n_rotors_); //first block containing derivatives wrt position + orientation 
+    d->Fx.block(0,nv-n_rotors_,nv-n_rotors_,n_rotors_) = MatrixXs::Zero(nv-n_rotors_,n_rotors_); //second block containing deivatives wrt rotor position 
+    d->Fx.block(0,nv,nv-n_rotors_,nv-n_rotors_) = tempFx.rightCols(nv-n_rotors_); //third block containing deivatives wrt linear + angular velocities 
+    d->Fx.block(0,(2*nv)-n_rotors_,nv-n_rotors_,n_rotors_) = MatrixXs::Zero(nv-n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
+    // derivatives of actuator dynamics 
+    d->Fx.block(nv-n_rotors_,0,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //first block containing derivatives wrt position + orientation 
+    d->Fx.block(nv-n_rotors_,nv-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //second block containing derivatives wrt rotor position 
+    d->Fx.block(nv-n_rotors_,nv,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //third block containing deivatives wrt linear + angular velocities 
+    //TODO next block 
+    d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
+
+    d->Fu.topRows(nv-n_rotors_) = d->pinocchio.Minv * d->multibody.actuation->dtau_du;
+    d->Fu.bottomRows(n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_);
   } else {
+    std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
+    exit(1);
     pinocchio::computeRNEADerivatives(pinocchio_, d->pinocchio, q, v, d->xout);
     d->dtau_dx.leftCols(nv) = d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
     d->dtau_dx.rightCols(nv) = d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
@@ -179,6 +210,9 @@ template <typename Scalar>
 void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::quasiStatic(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
     const Eigen::Ref<const VectorXs>& x, const std::size_t, const Scalar) {
+  //TODO implement function
+  std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error quasiStatic not implemented" << '\n';
+  exit(1);
   if (static_cast<std::size_t>(u.size()) != nu_) {
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
@@ -197,7 +231,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::quasiStatic(
   // Check the velocity input is zero
   assert_pretty(x.tail(nv).isZero(), "The velocity input should be zero for quasi-static to work.");
 
-  d->tmp_xstatic.head(nq) = q;
+  d->tmp_xstatic.head(nq) = q; 
   d->tmp_xstatic.tail(nv).setZero();
   u.setZero();
 

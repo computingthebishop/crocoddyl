@@ -164,6 +164,7 @@ class DifferentialActionModelFreeFwdDynamicsActuatedTpl : public DifferentialAct
   pinocchio::ModelTpl<Scalar>& pinocchio_;               //!< Pinocchio model
   bool without_armature_;                                //!< Indicate if we have defined an armature
   VectorXs armature_;                                    //!< Armature vector
+  std::size_t n_rotors_;                                 //!< Number of rotors
 };
 
 }  // namespace crocoddyl

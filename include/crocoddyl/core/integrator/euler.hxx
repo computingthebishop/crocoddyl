@@ -92,7 +92,7 @@ void IntegratedActionModelEulerTpl<Scalar>::calcDiff(const boost::shared_ptr<Act
   control_->calc(d->control, 0., u);
   differential_->calcDiff(d->differential, x, d->control->w);
   const MatrixXs& da_dx = d->differential->Fx;
-  const MatrixXs& da_du = d->differential->Fu;
+  const MatrixXs& da_du = d->differential->Fu; // this is [6 4], should be [10 4] 
   control_->multiplyByJacobian(d->control, da_du, d->da_du);
   d->Fx.topRows(nv).noalias() = da_dx * time_step2_;
   d->Fx.bottomRows(nv).noalias() = da_dx * time_step_;

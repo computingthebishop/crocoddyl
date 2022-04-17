@@ -24,13 +24,13 @@ StateMultibodyActuatedTpl<Scalar>::StateMultibodyActuatedTpl(boost::shared_ptr<P
   x0_.head(model->nq) = pinocchio::neutral(*pinocchio_.get());
   for (std::size_t i = 0; i < nr_; i++)
   {
-    x0_(model->nq+(2*i)) = 1;
+    x0_(model->nq+(2*i)) = 1; //setting real part to 1 img to 0
   }
 
-  nq_ = model->nq + 2*nr_;
-  nv_ = model->nv + nr_;
-  nx_ = nq_ + nv_;
-  ndx_ = 2*nv_;
+  nq_ = model->nq + 2*nr_;  // configuration space x y z rx ry rz rw a_1 b_1 ... a_nr b_nr
+  nv_ = model->nv + nr_;    // velocities vector vx vy vz vrx vry vrz w_1 ... w_nr
+  nx_ = nq_ + nv_;          // state dimension
+  ndx_ = 2*nv_;             // tangent space dimension
 }
 
 template <typename Scalar>
@@ -48,7 +48,7 @@ template <typename Scalar>
 typename MathBaseTpl<Scalar>::VectorXs StateMultibodyActuatedTpl<Scalar>::rand() const {
   VectorXs xrand = VectorXs::Random(nx_);
   xrand.head(nq_-(2*nr_)) = pinocchio::randomConfiguration(*pinocchio_.get());
-  //TODO normalize the complex number representing random rotor pose
+  //TODO set rotors position to a random configuration not 0 position
   for (std::size_t i = 0; i < nr_; i++)
   {
     xrand(pinocchio_->nq+(2*i)) = 1;
@@ -88,7 +88,7 @@ void StateMultibodyActuatedTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x
     Scalar br = (a*d)+(b*c);
     // Log map
     Scalar thetad = atan2(br,ar);
-    dxout(nq_-(2*nr_)+i) = thetad;
+    dxout(nv_-nr_+i) = thetad;
   }
   dxout.tail(nv_) = x1.tail(nv_) - x0.tail(nv_);
 }
@@ -117,7 +117,7 @@ void StateMultibodyActuatedTpl<Scalar>::integrate(const Eigen::Ref<const VectorX
     Scalar a = x(nq_-(2*nr_)+(i*2));
     Scalar b = x(nq_-(2*nr_)+(i*2)+1);
     // Exp map of tangent space vector
-    Scalar theta = dx(nq_-nr_+i);
+    Scalar theta = dx(nv_-nr_+i);
     Scalar c = cos(theta);
     Scalar d = sin(theta);
     // Product between x and exp map of dx
@@ -153,7 +153,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
 
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG0);
-    Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
+    Jfirst.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
     Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
     // std::cout<< "Jacobian first" << std::endl;
     // std::cout<< Jfirst << std::endl;
@@ -165,7 +165,7 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
     }
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
-    Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;     //wrt x1
+    Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;     //wrt x1
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian second" << std::endl;
     // std::cout<< Jsecond << std::endl;
@@ -184,8 +184,8 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
                            pinocchio::ARG0);
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
-    Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
-    Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
+    Jfirst.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
+    Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
     Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian both" << std::endl;
@@ -211,19 +211,19 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG0, pinocchio::SETTO);
-        Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;
+        Jfirst.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;
         Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG0, pinocchio::ADDTO);
-        Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() += (Scalar)1;
+        Jfirst.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() += (Scalar)1;
         Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jfirst.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG0, pinocchio::RMTO);
-        Jfirst.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() -= (Scalar)1;
+        Jfirst.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() -= (Scalar)1;
         Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
         break;
       default:
@@ -241,19 +241,19 @@ void StateMultibodyActuatedTpl<Scalar>::Jintegrate(const Eigen::Ref<const Vector
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG1, pinocchio::SETTO);
-        Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;
+        Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG1, pinocchio::ADDTO);
-        Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() += (Scalar)1;
+        Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() += (Scalar)1;
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() += (Scalar)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_-(2*nr_)), dx.head(nv_-nr_), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                               pinocchio::ARG1, pinocchio::RMTO);
-        Jsecond.block(nq_-nr_,nq_-nr_,nr_,nr_).diagonal().array() -= (Scalar)1;
+        Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() -= (Scalar)1;
         Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() -= (Scalar)1;
         break;
       default:

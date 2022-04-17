@@ -49,6 +49,7 @@ void exposeResidualControlGrav();
 void exposeResidualFrameAxisAlignment();
 void exposeResidualFrameCollision();
 void exposeResidualFramePlacement();
+void exposeResidualFramePlacementAugmented();
 void exposeResidualFrameRotation();
 void exposeResidualFrameTranslation();
 void exposeResidualFrameVelocity();
