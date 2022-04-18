@@ -156,14 +156,15 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
     d->Fx.block(0,0,nv-n_rotors_,nv-n_rotors_) = tempFx.leftCols(nv-n_rotors_); //first block containing derivatives wrt position + orientation 
     d->Fx.block(0,nv-n_rotors_,nv-n_rotors_,n_rotors_) = MatrixXs::Zero(nv-n_rotors_,n_rotors_); //second block containing deivatives wrt rotor position 
     d->Fx.block(0,nv,nv-n_rotors_,nv-n_rotors_) = tempFx.rightCols(nv-n_rotors_); //third block containing deivatives wrt linear + angular velocities 
-    d->Fx.block(0,(2*nv)-n_rotors_,nv-n_rotors_,n_rotors_) = MatrixXs::Zero(nv-n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
+    //d->Fx.block(0,(2*nv)-n_rotors_,nv-n_rotors_,n_rotors_) = MatrixXs::Zero(nv-n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
+    d->Fx.block(0,(2*nv)-n_rotors_,nv-n_rotors_,n_rotors_) = d->pinocchio.Minv * d->multibody.actuation->dtau_dx.rightCols(n_rotors_); //fourth block containing deivatives wrt rotor velocities 
     // derivatives of actuator dynamics 
     d->Fx.block(nv-n_rotors_,0,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //first block containing derivatives wrt position + orientation 
     d->Fx.block(nv-n_rotors_,nv-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //second block containing derivatives wrt rotor position 
     d->Fx.block(nv-n_rotors_,nv,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //third block containing deivatives wrt linear + angular velocities 
-    //d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
     d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_).diagonal().array() = (Scalar)(-1/time_ct); //fourth block containing deivatives wrt rotor velocities 
 
+    //Fu
     d->Fu.topRows(nv-n_rotors_) = d->pinocchio.Minv * d->multibody.actuation->dtau_du;
     //d->Fu.bottomRows(n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_);
     d->Fu.bottomRows(n_rotors_).diagonal().array() = (Scalar)(1/time_ct);
