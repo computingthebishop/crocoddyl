@@ -60,9 +60,10 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq()-(2*n_rotors_));
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv()-n_rotors_);
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> rotors_v = x.tail(n_rotors_);
-
+  // std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
+  // std::cout << "Control action: " << u.transpose() << "\n";
   actuation_->calc(d->multibody.actuation, x, u);
-
+  Scalar time_ct = 0.1; // TODO this as a parameter
   // Computing the dynamics using ABA or manually for armature case
   if (without_armature_) {
     try
@@ -75,8 +76,8 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
       std::cerr << e.what() << '\n';
     }
     // compute FO system acceleration
-    d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
-    //d->xout.tail(n_rotors_) = (u - rotors_v)/time_ct; // TODO use this implementation
+    // d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
+    d->xout.tail(n_rotors_) = ((-rotors_v)/time_ct) + ((1/time_ct)*u);
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
     std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
@@ -133,6 +134,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
   Data* d = static_cast<Data*>(data.get());
 
   actuation_->calcDiff(d->multibody.actuation, x, u);
+  Scalar time_ct = 0.1; // TODO this as a parameter
 
   // Computing the dynamics derivatives  
   if (without_armature_) {
@@ -159,11 +161,12 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
     d->Fx.block(nv-n_rotors_,0,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //first block containing derivatives wrt position + orientation 
     d->Fx.block(nv-n_rotors_,nv-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //second block containing derivatives wrt rotor position 
     d->Fx.block(nv-n_rotors_,nv,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //third block containing deivatives wrt linear + angular velocities 
-    //TODO next block 
-    d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
+    //d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //fourth block containing deivatives wrt rotor velocities 
+    d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_).diagonal().array() = (Scalar)(-1/time_ct); //fourth block containing deivatives wrt rotor velocities 
 
     d->Fu.topRows(nv-n_rotors_) = d->pinocchio.Minv * d->multibody.actuation->dtau_du;
-    d->Fu.bottomRows(n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_);
+    //d->Fu.bottomRows(n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_);
+    d->Fu.bottomRows(n_rotors_).diagonal().array() = (Scalar)(1/time_ct);
   } else {
     std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
     exit(1);

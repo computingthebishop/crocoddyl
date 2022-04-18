@@ -79,9 +79,9 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
       throw_pretty("Invalid argument: "
                    << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
     }
-
-    //data->tau.noalias() = tau_f_ * x.tail(n_rotors_); TODO use this implementation that defines the forces based on the rotation speed of the state vector
-    data->tau.noalias() = tau_f_ * u;
+    //std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
+    data->tau.noalias() = tau_f_ * x.tail(n_rotors_); 
+    //data->tau.noalias() = tau_f_ * u;
   }
 
 #ifndef NDEBUG
@@ -92,14 +92,16 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
                         const Eigen::Ref<const VectorXs>&) {
 #endif
     // The derivatives has constant values which were set in createData.
-    assert_pretty(MatrixXs(data->dtau_du).isApprox(tau_f_), "dtau_du has wrong value");
+    //assert_pretty(MatrixXs(data->dtau_du).isApprox(tau_f_), "dtau_du has wrong value");
   }
 
   boost::shared_ptr<Data> createData() {
     boost::shared_ptr<Data> data = boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
-    data->dtau_du = tau_f_;
+    //data->dtau_du = tau_f_;
+    data->dtau_du = MatrixXs::Zero(6,n_rotors_); // derivative wrt controls is 0 as it depends on the state only
     data->dtau_dx.resize(state_->get_nv()-n_rotors_,state_->get_ndx()); //required resize as the ActuationDataAbstractTpl initiliases the matrix based on state->nv
     data->dtau_dx.setZero();
+    data->dtau_dx.rightCols(n_rotors_) = tau_f_;
     return data;
   }
 
