@@ -62,7 +62,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> rotors_v = x.tail(n_rotors_);
 
   actuation_->calc(d->multibody.actuation, x, u);
-
+  Scalar time_ct = 0.1;
   // Computing the dynamics using ABA or manually for armature case
   if (without_armature_) {
     try
@@ -75,8 +75,8 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
       std::cerr << e.what() << '\n';
     }
     // compute FO system acceleration
-    d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
-    //d->xout.tail(n_rotors_) = (u - rotors_v)/time_ct; // TODO use this implementation
+    //d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
+    d->xout.tail(n_rotors_) = ((-rotors_v)/time_ct) + ((1/time_ct)*u);
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
     std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
