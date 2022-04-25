@@ -64,7 +64,8 @@ class DifferentialActionModelFreeFwdDynamicsActuatedTpl : public DifferentialAct
 
   DifferentialActionModelFreeFwdDynamicsActuatedTpl(boost::shared_ptr<StateMultibody> state,
                                             boost::shared_ptr<ActuationModelAbstract> actuation,
-                                            boost::shared_ptr<CostModelSum> costs);
+                                            boost::shared_ptr<CostModelSum> costs, 
+                                            Scalar time_ct);
   virtual ~DifferentialActionModelFreeFwdDynamicsActuatedTpl();
 
   /**
@@ -165,6 +166,7 @@ class DifferentialActionModelFreeFwdDynamicsActuatedTpl : public DifferentialAct
   bool without_armature_;                                //!< Indicate if we have defined an armature
   VectorXs armature_;                                    //!< Armature vector
   std::size_t n_rotors_;                                 //!< Number of rotors
+  Scalar time_ct_;                                        //!< First Order System time constant
 };
 
 }  // namespace crocoddyl

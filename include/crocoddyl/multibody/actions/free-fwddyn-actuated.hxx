@@ -24,7 +24,7 @@ namespace crocoddyl {
 template <typename Scalar>
 DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::DifferentialActionModelFreeFwdDynamicsActuatedTpl(
     boost::shared_ptr<StateMultibody> state, boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs)
+    boost::shared_ptr<CostModelSum> costs, Scalar time_ct)
     : Base(state, actuation->get_nu(), costs->get_nr()),
       actuation_(actuation),
       costs_(costs),
@@ -38,6 +38,7 @@ DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::DifferentialActionMod
   Base::set_u_lb(Scalar(-1.) * pinocchio_.effortLimit.tail(nu_));
   Base::set_u_ub(Scalar(+1.) * pinocchio_.effortLimit.tail(nu_));
   n_rotors_ = nu_;
+  time_ct_ = time_ct;
 }
 
 template <typename Scalar>
@@ -63,7 +64,6 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   // std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
   // std::cout << "Control action: " << u.transpose() << "\n";
   actuation_->calc(d->multibody.actuation, x, u);
-  Scalar time_ct = 0.1; // TODO this as a parameter
   // Computing the dynamics using ABA or manually for armature case
   if (without_armature_) {
     try
@@ -77,7 +77,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
     }
     // compute FO system acceleration
     // d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
-    d->xout.tail(n_rotors_) = ((-rotors_v)/time_ct) + ((1/time_ct)*u);
+    d->xout.tail(n_rotors_) = ((-rotors_v)/time_ct_) + ((1/time_ct_)*u);
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
     std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
@@ -134,7 +134,6 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
   Data* d = static_cast<Data*>(data.get());
 
   actuation_->calcDiff(d->multibody.actuation, x, u);
-  Scalar time_ct = 0.1; // TODO this as a parameter
 
   // Computing the dynamics derivatives  
   if (without_armature_) {
@@ -162,12 +161,12 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
     d->Fx.block(nv-n_rotors_,0,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //first block containing derivatives wrt position + orientation 
     d->Fx.block(nv-n_rotors_,nv-n_rotors_,n_rotors_,n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_); //second block containing derivatives wrt rotor position 
     d->Fx.block(nv-n_rotors_,nv,n_rotors_,nv-n_rotors_) = MatrixXs::Zero(n_rotors_,nv-n_rotors_); //third block containing deivatives wrt linear + angular velocities 
-    d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_).diagonal().array() = (Scalar)(-1/time_ct); //fourth block containing deivatives wrt rotor velocities 
+    d->Fx.block(nv-n_rotors_,(2*nv)-n_rotors_,n_rotors_,n_rotors_).diagonal().array() = (Scalar)(-1/time_ct_); //fourth block containing deivatives wrt rotor velocities 
 
     //Fu
     d->Fu.topRows(nv-n_rotors_) = d->pinocchio.Minv * d->multibody.actuation->dtau_du;
     //d->Fu.bottomRows(n_rotors_) = MatrixXs::Zero(n_rotors_,n_rotors_);
-    d->Fu.bottomRows(n_rotors_).diagonal().array() = (Scalar)(1/time_ct);
+    d->Fu.bottomRows(n_rotors_).diagonal().array() = (Scalar)(1/time_ct_);
   } else {
     std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
     exit(1);
@@ -214,7 +213,7 @@ template <typename Scalar>
 void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::quasiStatic(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
     const Eigen::Ref<const VectorXs>& x, const std::size_t, const Scalar) {
-  //TODO implement function
+  //TODO(smartinezs) implement function
   std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error quasiStatic not implemented" << '\n';
   exit(1);
   if (static_cast<std::size_t>(u.size()) != nu_) {

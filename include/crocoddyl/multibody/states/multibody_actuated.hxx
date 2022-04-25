@@ -48,7 +48,7 @@ template <typename Scalar>
 typename MathBaseTpl<Scalar>::VectorXs StateMultibodyActuatedTpl<Scalar>::rand() const {
   VectorXs xrand = VectorXs::Random(nx_);
   xrand.head(nq_-(2*nr_)) = pinocchio::randomConfiguration(*pinocchio_.get());
-  //TODO set rotors position to a random configuration not 0 position
+  //TODO(smartinezs) set rotors position to a random configuration not 0 position
   for (std::size_t i = 0; i < nr_; i++)
   {
     xrand(pinocchio_->nq+(2*i)) = 1;
@@ -268,7 +268,7 @@ void StateMultibodyActuatedTpl<Scalar>::JintegrateTransport(const Eigen::Ref<con
                                                     const Eigen::Ref<const VectorXs>& dx, Eigen::Ref<MatrixXs> Jin,
                                                     const Jcomponent firstsecond) const {
   //std::cout<< "[StateMultibodyActuatedTpl::JintegrateTransport]" << std::endl;
-  //TODO: check this function
+  //TODO(smartinezs): check this function
   assert_pretty(is_a_Jcomponent(firstsecond), ("firstsecond must be one of the Jcomponent {both, first, second}"));
 
   switch (firstsecond) {

@@ -25,7 +25,7 @@ void exposeDifferentialActionFreeFwdDynamicsActuated() {
       "include the armature, you need to use set_armature(). On the other hand, the\n"
       "stack of cost functions are implemented in CostModelSum().",
       bp::init<boost::shared_ptr<StateMultibody>, boost::shared_ptr<ActuationModelAbstract>,
-               boost::shared_ptr<CostModelSum> >(bp::args("self", "state", "actuation", "costs"),
+               boost::shared_ptr<CostModelSum>,  double >(bp::args("self", "state", "actuation", "costs", "time_ct"),
                                                  "Initialize the free forward-dynamics action model.\n\n"
                                                  ":param state: multibody state\n"
                                                  ":param actuation: abstract actuation model\n"
