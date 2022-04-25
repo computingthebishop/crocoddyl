@@ -152,7 +152,7 @@ struct ResidualDataFramePlacementAugmentedTpl : public ResidualDataAbstractTpl<_
 
   template <template <typename Scalar> class Model>
   ResidualDataFramePlacementAugmentedTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
-      : Base(model, data), rJf(6, 6), fJf(6, model->get_state()->get_nv() - 4) { //TODO remove hard-coded rotor number
+      : Base(model, data), rJf(6, 6), fJf(6, model->get_state()->get_nv() - model->get_nu()) { 
     r.setZero();
     rJf.setZero();
     fJf.setZero();
