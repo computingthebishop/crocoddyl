@@ -50,6 +50,7 @@ void exposeMultibody() {
   exposeResidualFrameRotation();
   exposeResidualFrameTranslation();
   exposeResidualFrameVelocity();
+  exposeResidualFrameVelocityAugmented();
   exposeResidualImpulseCoM();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL

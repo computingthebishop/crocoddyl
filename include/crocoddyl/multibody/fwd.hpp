@@ -170,6 +170,11 @@ template <typename Scalar>
 struct ResidualDataFrameVelocityTpl;
 
 template <typename Scalar>
+class ResidualModelFrameVelocityAugmentedTpl;
+template <typename Scalar>
+struct ResidualDataFrameVelocityAugmentedTpl;
+
+template <typename Scalar>
 class ResidualModelImpulseCoMTpl;
 template <typename Scalar>
 struct ResidualDataImpulseCoMTpl;
@@ -437,6 +442,8 @@ typedef ResidualModelFrameTranslationTpl<double> ResidualModelFrameTranslation;
 typedef ResidualDataFrameTranslationTpl<double> ResidualDataFrameTranslation;
 typedef ResidualModelFrameVelocityTpl<double> ResidualModelFrameVelocity;
 typedef ResidualDataFrameVelocityTpl<double> ResidualDataFrameVelocity;
+typedef ResidualModelFrameVelocityAugmentedTpl<double> ResidualModelFrameVelocityAugmented;
+typedef ResidualDataFrameVelocityAugmentedTpl<double> ResidualDataFrameVelocityAugmented;
 typedef ResidualModelImpulseCoMTpl<double> ResidualModelImpulseCoM;
 typedef ResidualDataImpulseCoMTpl<double> ResidualDataImpulseCoM;
 typedef ResidualModelStateTpl<double> ResidualModelState;

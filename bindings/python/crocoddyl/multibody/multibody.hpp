@@ -53,6 +53,7 @@ void exposeResidualFramePlacementAugmented();
 void exposeResidualFrameRotation();
 void exposeResidualFrameTranslation();
 void exposeResidualFrameVelocity();
+void exposeResidualFrameVelocityAugmented();
 void exposeResidualImpulseCoM();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
