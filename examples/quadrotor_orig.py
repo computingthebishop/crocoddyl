@@ -9,7 +9,6 @@ import example_robot_data
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
 WITHDISPLAY = True
-WITHPLOT = False
 
 hector = example_robot_data.load('hector')
 robot_model = hector.model
@@ -17,18 +16,12 @@ robot_model = hector.model
 target_pos = np.array([2., 0., 1.])
 target_quat = pinocchio.Quaternion(1., 0., 0., 0.)
 
-rotors = 4
-state = crocoddyl.StateMultibodyActuated(robot_model,rotors) # create state model from pinocchio model
+state = crocoddyl.StateMultibody(robot_model)
 
-d_cog, cf, cm = 0.1525, 6.6e-5, 1e-6
-tau_f = np.array([[0., 0., 0., 0.], 
-                  [0., 0., 0., 0.], 
-                  [1., 1., 1., 1.], 
-                  [0., d_cog, 0., -d_cog],
-                  [-d_cog, 0., d_cog, 0.], 
-                  [-cm / cf, cm / cf, -cm / cf, cm / cf]])
-                  
-actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f) # using custom actuator class
+d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., 0.1
+tau_f = np.array([[0., 0., 0., 0.], [0., 0., 0., 0.], [1., 1., 1., 1.], [0., d_cog, 0., -d_cog],
+                  [-d_cog, 0., d_cog, 0.], [-cm / cf, cm / cf, -cm / cf, cm / cf]])
+actuation = crocoddyl.ActuationModelMultiCopterBase(state, tau_f)
 
 nu = actuation.nu
 runningCostModel = crocoddyl.CostModelSum(state, nu)
@@ -36,23 +29,12 @@ terminalCostModel = crocoddyl.CostModelSum(state, nu)
 
 # Costs
 xResidual = crocoddyl.ResidualModelState(state, state.zero(), nu)
-#weights = np.array(([0.1] * 3) + ([1000.] * 3) + ([0.01] * 2 * rotors) + ([1000.] * robot_model.nv) + ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
-weights = np.array(([0.1] * 3) + 
-                  ([1000.] * 3) + 
-                  ([0.01] * rotors) + 
-                  ([1000.] * robot_model.nv) + 
-                  ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
-                 # x y z rx ry rz   vx vy vz vrx vry vrz
-xActivation = crocoddyl.ActivationModelWeightedQuad(weights)
-
-
+xActivation = crocoddyl.ActivationModelWeightedQuad(np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv))
 uResidual = crocoddyl.ResidualModelControl(state, nu)
 xRegCost = crocoddyl.CostModelResidual(state, xActivation, xResidual)
 uRegCost = crocoddyl.CostModelResidual(state, uResidual)
-
-goalTrackingResidual = crocoddyl.ResidualModelFramePlacementAugmented(state, robot_model.getFrameId("base_link"),
-                                                            pinocchio.SE3(target_quat.matrix(), target_pos), nu)
-
+goalTrackingResidual = crocoddyl.ResidualModelFramePlacement(state, robot_model.getFrameId("base_link"),
+                                                             pinocchio.SE3(target_quat.matrix(), target_pos), nu)
 goalTrackingCost = crocoddyl.CostModelResidual(state, goalTrackingResidual)
 runningCostModel.addCost("xReg", xRegCost, 1e-6)
 runningCostModel.addCost("uReg", uRegCost, 1e-6)
@@ -61,15 +43,13 @@ terminalCostModel.addCost("goalPose", goalTrackingCost, 3.)
 
 dt = 3e-2
 runningModel = crocoddyl.IntegratedActionModelEuler(
-    crocoddyl.DifferentialActionModelFreeFwdDynamicsActuated(state, actuation, runningCostModel, 1), dt)
+    crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, runningCostModel), dt)
 terminalModel = crocoddyl.IntegratedActionModelEuler(
-    crocoddyl.DifferentialActionModelFreeFwdDynamicsActuated(state, actuation, terminalCostModel, 1), dt)
+    crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, terminalCostModel), dt)
 
 # Creating the shooting problem and the FDDP solver
 T = 330
-initial_state = np.concatenate([hector.q0, ([0, 1] * rotors), np.zeros(state.nv)])
-
-problem = crocoddyl.ShootingProblem(initial_state, [runningModel] * T, terminalModel)
+problem = crocoddyl.ShootingProblem(np.concatenate([hector.q0, np.zeros(state.nv)]), [runningModel] * T, terminalModel)
 solver = crocoddyl.SolverFDDP(problem)
 
 solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])

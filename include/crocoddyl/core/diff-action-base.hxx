@@ -67,6 +67,13 @@ void DifferentialActionModelAbstractTpl<Scalar>::quasiStatic(
 }
 
 template <typename Scalar>
+const boost::shared_ptr<CostModelSum>& DifferentialActionModelAbstractTpl<Scalar>::get_costs()
+const {
+  boost::shared_ptr<CostModelSum> costs_;
+  return costs_;
+}
+
+template <typename Scalar>
 typename MathBaseTpl<Scalar>::VectorXs DifferentialActionModelAbstractTpl<Scalar>::quasiStatic_x(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, const VectorXs& x, const std::size_t maxiter,
     const Scalar tol) {
