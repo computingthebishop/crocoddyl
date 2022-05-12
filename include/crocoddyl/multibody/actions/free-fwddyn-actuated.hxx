@@ -77,7 +77,8 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
     }
     // compute FO system acceleration
     // d->xout.tail(n_rotors_) = VectorXs::Zero(n_rotors_); 
-    d->xout.tail(n_rotors_) = ((-rotors_v)/time_ct_) + ((1/time_ct_)*u);
+    // d->xout.tail(n_rotors_) = ((-rotors_v)/time_ct_) + ((1/time_ct_)*u);
+    d->xout.tail(n_rotors_) = (u-rotors_v)/time_ct_;
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
     std::cerr << "[DifferentialActionModelFreeFwdDynamicsActuatedTpl] Error armature not implemented" << '\n';
