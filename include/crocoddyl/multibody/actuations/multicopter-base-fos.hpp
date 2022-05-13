@@ -53,7 +53,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
    * @param[in] state  State of the dynamical system
    * @param[in] tau_f  Matrix that maps the thrust of each propeller to the net force and torque
    */
-  ActuationModelMultiCopterBaseFosTpl(boost::shared_ptr<StateMultibody> state, const Eigen::Ref<const Matrix6xs>& tau_f)
+  ActuationModelMultiCopterBaseFosTpl(boost::shared_ptr<StateMultibody> state, const Eigen::Ref<const Matrix6xs>& tau_f, const Scalar cf)
       : Base(state, tau_f.cols()), n_rotors_(tau_f.cols()) {
     pinocchio::JointModelFreeFlyerTpl<Scalar> ff_joint;
     if (state->get_pinocchio()->joints[1].shortname() != ff_joint.shortname()) {
@@ -61,6 +61,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
                    << "the first joint has to be free-flyer");
     }
 
+    cf_ = cf;
     tau_f_ = MatrixXs::Zero(state_->get_nv()-nu_, nu_); // tau matrix defines generalized forces based on control inputs
     tau_f_.block(0, 0, 6, n_rotors_) = tau_f;
     if (nu_ > n_rotors_) {
@@ -80,19 +81,17 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
                    << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
     }
     //std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
-    data->tau.noalias() = tau_f_ * x.tail(n_rotors_); 
+    // data->tau.noalias() = tau_f_ * x.tail(n_rotors_); 
+    data->tau.noalias() = tau_f_ * x.tail(n_rotors_)*x.tail(n_rotors_)*cf_; 
     //data->tau.noalias() = tau_f_ * u;
   }
 
-#ifndef NDEBUG
-  virtual void calcDiff(const boost::shared_ptr<Data>& data, const Eigen::Ref<const VectorXs>&,
+  virtual void calcDiff(const boost::shared_ptr<Data>& data, const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>&) {
-#else
-  virtual void calcDiff(const boost::shared_ptr<Data>&, const Eigen::Ref<const VectorXs>&,
-                        const Eigen::Ref<const VectorXs>&) {
-#endif
-    // The derivatives has constant values which were set in createData.
-    //assert_pretty(MatrixXs(data->dtau_du).isApprox(tau_f_), "dtau_du has wrong value");
+    Eigen::MatrixXd temp(n_rotors_,n_rotors_);
+    temp.diagonal().array() = cf_; 
+    temp = temp*x.tail(n_rotors_)*2;
+    data->dtau_dx.rightCols(n_rotors_) = tau_f_*temp;
   }
 
   boost::shared_ptr<Data> createData() {
@@ -113,6 +112,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
   // Specific of multicopter
   MatrixXs tau_f_;  // Matrix from rotors thrust to body force/moments
   std::size_t n_rotors_;
+  Scalar cf_;
 
   using Base::nu_;
   using Base::state_;

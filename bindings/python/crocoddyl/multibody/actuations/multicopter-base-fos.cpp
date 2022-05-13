@@ -18,8 +18,8 @@ void exposeActuationModelMultiCopterBaseFos() {
   bp::class_<ActuationModelMultiCopterBaseFos, bp::bases<ActuationModelAbstract> >(
       "ActuationModelMultiCopterBaseFos",
       "Actuation models with base actuated by several propellers (e.g. aerial manipulators).",
-      bp::init<boost::shared_ptr<StateMultibody>, Eigen::Matrix<double, 6, Eigen::Dynamic> >(
-          bp::args("self", "state", "tau_f"),
+      bp::init<boost::shared_ptr<StateMultibody>, Eigen::Matrix<double, 6, Eigen::Dynamic>, double >(
+          bp::args("self", "state", "tau_f", "cf"),
           "Initialize the full actuation model.\n\n"
           ":param state: state of multibody system\n"
           ":param tau_f: matrix that maps rotors thrust to generalized torque of the flying base."))
