@@ -104,7 +104,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
     data->dtau_du = MatrixXs::Zero(6,n_rotors_); // derivative wrt controls is 0 as it depends on the state only
     data->dtau_dx.resize(state_->get_nv()-n_rotors_,state_->get_ndx()); //required resize as the ActuationDataAbstractTpl initiliases the matrix based on state->nv
     data->dtau_dx.setZero();
-    data->dtau_dx.rightCols(n_rotors_) = tau_f_;
+    // data->dtau_dx.rightCols(n_rotors_) = tau_f_;
     return data;
   }
 
