@@ -8,7 +8,7 @@ import example_robot_data
 
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
-WITHDISPLAY = True
+WITHDISPLAY = False
 WITHPLOT = True
 
 hector = example_robot_data.load('hector')
@@ -31,7 +31,7 @@ tau_f = np.array([[0., 0., 0., 0.],
                   [-d_cog, 0., d_cog, 0.], 
                   [-cm / cf, cm / cf, -cm / cf, cm / cf]])
                   
-actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f) # using custom actuator class
+actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f, cf) # using custom actuator class
 
 nu = actuation.nu
 runningCostModel = crocoddyl.CostModelSum(state, nu)

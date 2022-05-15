@@ -82,16 +82,20 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
     }
     //std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
     // data->tau.noalias() = tau_f_ * x.tail(n_rotors_); 
-    data->tau.noalias() = tau_f_ * x.tail(n_rotors_)*x.tail(n_rotors_)*cf_; 
+    data->tau.noalias() = tau_f_ * (x.tail(n_rotors_).array()*x.tail(n_rotors_).array()*cf_).matrix(); 
     //data->tau.noalias() = tau_f_ * u;
   }
 
   virtual void calcDiff(const boost::shared_ptr<Data>& data, const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>&) {
-    Eigen::MatrixXd temp(n_rotors_,n_rotors_);
-    temp.diagonal().array() = cf_; 
-    temp = temp*x.tail(n_rotors_)*2;
-    data->dtau_dx.rightCols(n_rotors_) = tau_f_*temp;
+    // Eigen::MatrixXd temp(n_rotors_,n_rotors_);
+    // temp.diagonal().array() = cf_; 
+    // temp = temp*x.tail(n_rotors_)*2;
+    // data->dtau_dx.rightCols(n_rotors_) = tau_f_*temp;
+    for (std::size_t i = 0; i < n_rotors_; i++)
+    {
+      data->dtau_dx.col(i+state_->get_ndx()-n_rotors_) = tau_f_.col(i)*cf_*2*x(i+state_->get_nq()+state_->get_nv()-n_rotors_);
+    }
   }
 
   boost::shared_ptr<Data> createData() {
