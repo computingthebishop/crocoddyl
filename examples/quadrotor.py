@@ -8,7 +8,7 @@ import example_robot_data
 
 WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
-WITHDISPLAY = False
+WITHDISPLAY = True
 WITHPLOT = True
 
 hector = example_robot_data.load('hector')
@@ -23,7 +23,9 @@ motor_time_ct = 0.01
 rotors = 4
 state = crocoddyl.StateMultibodyActuated(robot_model,rotors) # create state model from pinocchio model
 
-d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., 0.1
+d_cog, cf, cm = 0.1525, 6.6e-5, 1e-6, 
+u_lim, l_lim = 7, 0.1
+
 tau_f = np.array([[0., 0., 0., 0.], 
                   [0., 0., 0., 0.], 
                   [1., 1., 1., 1.], 
@@ -31,7 +33,7 @@ tau_f = np.array([[0., 0., 0., 0.],
                   [-d_cog, 0., d_cog, 0.], 
                   [-cm / cf, cm / cf, -cm / cf, cm / cf]])
                   
-actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f, cf) # using custom actuator class
+actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f, 1) # using custom actuator class
 
 nu = actuation.nu
 runningCostModel = crocoddyl.CostModelSum(state, nu)
@@ -63,11 +65,11 @@ goalTrackingResidual = crocoddyl.ResidualModelFramePlacementAugmented(state, rob
                                                             pinocchio.SE3(target_quat.matrix(), target_pos), nu)
 goalTrackingCost = crocoddyl.CostModelResidual(state, goalTrackingResidual)
 
-runningCostModel.addCost("xReg", xRegCost, 1e-6)
-runningCostModel.addCost("uReg", uRegCost, 1e-6)
+runningCostModel.addCost("xReg", xRegCost, 0.8e-3)
+runningCostModel.addCost("uReg", uRegCost, 1e-3)
 # runningCostModel.addCost("trackPose", goalTrackingCost, 1e-2)
-wp1CostModel.addCost("wp1",wp1TrackingCost, 3e-1)
-terminalCostModel.addCost("goalPose", goalTrackingCost, 3.)
+wp1CostModel.addCost("wp1",wp1TrackingCost, 40.)
+terminalCostModel.addCost("goalPose", goalTrackingCost, 20.)
 
 dt = 9e-3
 runningModel = crocoddyl.IntegratedActionModelEuler(
@@ -98,8 +100,8 @@ for i in range(T):
         models_arr.append(runningModel)
 
 problem = crocoddyl.ShootingProblem(initial_state, models_arr, terminalModel)
-solver = crocoddyl.SolverFDDP(problem)
-# solver = crocoddyl.SolverBoxFDDP(problem)
+# solver = crocoddyl.SolverFDDP(problem)
+solver = crocoddyl.SolverBoxFDDP(problem)
 
 solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 
