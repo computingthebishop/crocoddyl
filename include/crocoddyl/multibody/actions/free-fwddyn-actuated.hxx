@@ -64,6 +64,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calc(
   // std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
   // std::cout << "Control action: " << u.transpose() << "\n";
   actuation_->calc(d->multibody.actuation, x, u);
+
   // Computing the dynamics using ABA or manually for armature case
   if (without_armature_) {
     try
