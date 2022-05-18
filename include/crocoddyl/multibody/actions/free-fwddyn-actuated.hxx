@@ -147,7 +147,7 @@ void DifferentialActionModelFreeFwdDynamicsActuatedTpl<Scalar>::calcDiff(
                                      
     // assing values of d->multibody.actuation->dtau_dx to the temporal matrix
     temp_dtau_dx.leftCols(nv-n_rotors_) = d->multibody.actuation->dtau_dx.block(0,0,nv-n_rotors_,nv-n_rotors_);
-    temp_dtau_dx.rightCols(nv-n_rotors_) = d->multibody.actuation->dtau_dx.block(0,nv-n_rotors_,nv-n_rotors_,nv-n_rotors_);
+    temp_dtau_dx.rightCols(nv-n_rotors_) = d->multibody.actuation->dtau_dx.block(0,nv,nv-n_rotors_,nv-n_rotors_);
 
     // compute partial Fx
     tempFx += d->pinocchio.Minv * temp_dtau_dx;
