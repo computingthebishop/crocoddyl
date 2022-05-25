@@ -22,8 +22,6 @@ StateMultibodyTpl<Scalar>::StateMultibodyTpl(boost::shared_ptr<PinocchioModel> m
     : Base(model->nq + model->nv, 2 * model->nv), pinocchio_(model), x0_(VectorXs::Zero(model->nq + model->nv)) {
   x0_.head(nq_) = pinocchio::neutral(*pinocchio_.get());
 
-  std::cout << "nq: " << model->nq << std::endl;
-  std::cout << "nv: " << model->nv << std::endl;
   // In a multibody system, we could define the first joint using Lie groups.
   // The current cases are free-flyer (SE3) and spherical (S03).
   // Instead simple represents any joint that can model within the Euclidean manifold.

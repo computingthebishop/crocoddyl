@@ -20,7 +20,6 @@ namespace crocoddyl {
 template <typename Scalar>
 StateMultibodyActuatedTpl<Scalar>::StateMultibodyActuatedTpl(boost::shared_ptr<PinocchioModel> model, std::size_t nr)
     : pinocchio_(model), Base(model), x0_(VectorXs::Zero(model->nq + (2*nr) + model->nv + nr)), nr_(nr) {
-  std::cout<< "[StateMultibodyActuatedTpl]" << std::endl;
   x0_.head(model->nq) = pinocchio::neutral(*pinocchio_.get());
   for (std::size_t i = 0; i < nr_; i++)
   {
