@@ -52,6 +52,8 @@ class ActuationSquashingModelTpl : public ActuationModelAbstractTpl<_Scalar> {
     squashing_->calcDiff(d->squashing, u);
     actuation_->calcDiff(d->actuation, x, d->squashing->u);
     data->dtau_du.noalias() = d->actuation->dtau_du * d->squashing->du_ds;
+    data->dtau_dx.resize(d->actuation->dtau_dx.cols(),d->actuation->dtau_dx.rows());
+    data->dtau_dx = d->actuation->dtau_dx;
   };
 
   boost::shared_ptr<ActuationDataAbstract> createData() {
