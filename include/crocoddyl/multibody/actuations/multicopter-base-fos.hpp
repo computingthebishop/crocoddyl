@@ -80,19 +80,21 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
                    << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
     }
     //std::cout << "rotor speeds: " << x.tail(n_rotors_).transpose() << "\n";
-    data->tau.noalias() = tau_f_ * x.tail(n_rotors_); 
+    // data->tau.noalias() = tau_f_ * x.tail(n_rotors_);
+    Eigen::VectorXd debug_r_velocities(n_rotors_);
+    debug_r_velocities = (x.tail(n_rotors_).array()*x.tail(n_rotors_).array());
+    data->tau.noalias() = tau_f_ * debug_r_velocities; 
     //data->tau.noalias() = tau_f_ * u;
   }
 
-#ifndef NDEBUG
-  virtual void calcDiff(const boost::shared_ptr<Data>& data, const Eigen::Ref<const VectorXs>&,
+  virtual void calcDiff(const boost::shared_ptr<Data>& data, const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>&) {
-#else
-  virtual void calcDiff(const boost::shared_ptr<Data>&, const Eigen::Ref<const VectorXs>&,
-                        const Eigen::Ref<const VectorXs>&) {
-#endif
     // The derivatives has constant values which were set in createData.
     //assert_pretty(MatrixXs(data->dtau_du).isApprox(tau_f_), "dtau_du has wrong value");
+    for (std::size_t i = 0; i < n_rotors_; i++)
+    {
+      data->dtau_dx.col(i+state_->get_ndx()-n_rotors_) = tau_f_.col(i)*2*x(i+state_->get_nq()+state_->get_nv()-n_rotors_);
+    }
   }
 
   boost::shared_ptr<Data> createData() {
