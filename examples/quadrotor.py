@@ -23,7 +23,7 @@ motor_time_ct = 0.01
 rotors = 4
 state = crocoddyl.StateMultibodyActuated(robot_model,rotors) # create state model from pinocchio model
 
-d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., 0.1
+d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., -5.0
 tau_f = np.array([[0., 0., 0., 0.], 
                   [0., 0., 0., 0.], 
                   [1., 1., 1., 1.], 
@@ -43,9 +43,9 @@ xResidual = crocoddyl.ResidualModelState(state, state.zero(), nu)
 #weights = np.array(([0.1] * 3) + ([1000.] * 3) + ([0.01] * 2 * rotors) + ([1000.] * robot_model.nv) + ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
 weights = np.array(([0.1] * 3) + 
                   ([1000.] * 3) + 
-                  ([0.01] * rotors) + 
+                  ([0.0] * rotors) + 
                   ([1000.] * robot_model.nv) + 
-                  ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
+                  ([0.001] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
                  # x y z rx ry rz   vx vy vz vrx vry vrz
 xActivation = crocoddyl.ActivationModelWeightedQuad(weights)
 
@@ -64,7 +64,7 @@ goalTrackingResidual = crocoddyl.ResidualModelFramePlacementAugmented(state, rob
 goalTrackingCost = crocoddyl.CostModelResidual(state, goalTrackingResidual)
 
 runningCostModel.addCost("xReg", xRegCost, 1e-6)
-runningCostModel.addCost("uReg", uRegCost, 1e-6)
+runningCostModel.addCost("uReg", uRegCost, 1e-5)
 # runningCostModel.addCost("trackPose", goalTrackingCost, 1e-2)
 wp1CostModel.addCost("wp1",wp1TrackingCost, 3e-1)
 terminalCostModel.addCost("goalPose", goalTrackingCost, 3.)
@@ -97,7 +97,7 @@ for i in range(T):
     else:
         models_arr.append(runningModel)
 
-problem = crocoddyl.ShootingProblem(initial_state, models_arr, terminalModel)
+problem = crocoddyl.ShootingProblem(initial_state, [runningModel]*T, terminalModel)
 solver = crocoddyl.SolverFDDP(problem)
 # solver = crocoddyl.SolverBoxFDDP(problem)
 
