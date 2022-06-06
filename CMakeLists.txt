@@ -19,7 +19,7 @@ INCLUDE(cmake/apple.cmake)
 
 # Print initial message
 MESSAGE(STATUS "${PROJECT_DESCRIPTION}, version ${PROJECT_VERSION}")
-MESSAGE(STATUS "Copyright (C) 2018-2021 CNRS-LAAS, University of Edinburgh, INRIA")
+MESSAGE(STATUS "Copyright (C) 2018-2022 CNRS-LAAS, University of Edinburgh, INRIA")
 MESSAGE(STATUS "All rights reserved.")
 MESSAGE(STATUS "Released under the BSD 3-Clause License.")
 
@@ -66,7 +66,11 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/find-external/CppAD/" ${CMAKE_M
 
 # Add the different required and optional dependencies
 ADD_PROJECT_DEPENDENCY(pinocchio 2.6.3 REQUIRED PKG_CONFIG_REQUIRES "pinocchio >= 2.6.3")
-ADD_PROJECT_DEPENDENCY(example-robot-data 3.7.0 REQUIRED PKG_CONFIG_REQUIRES "example-robot-data >= 3.7.0")
+IF(BUILD_EXAMPLES OR BUILD_TESTING OR BUILD_BENCHMARK)
+  ADD_PROJECT_DEPENDENCY(example-robot-data 3.7.0 REQUIRED PKG_CONFIG_REQUIRES "example-robot-data >= 3.7.0")
+ELSE()
+  ADD_OPTIONAL_DEPENDENCY(example-robot-data)
+ENDIF()
 ADD_OPTIONAL_DEPENDENCY("scipy")
 ADD_OPTIONAL_DEPENDENCY(ipopt)
 
@@ -74,19 +78,21 @@ OPTION(BUILD_WITH_CODEGEN_SUPPORT "Build the library with the Code Generation su
 
 OPTION(BUILD_WITH_MULTITHREADS "Build the library with the Multithreading support (required OpenMP)" OFF)
 IF(BUILD_WITH_MULTITHREADS)
-  INCLUDE(ProcessorCount)
-  ProcessorCount(NPROCESSOR)
-  IF(NOT NPROCESSOR EQUAL 0)
-    MATH(EXPR NPROCESSOR ${NPROCESSOR}/2)
-    SET(BUILD_WITH_NTHREADS ${NPROCESSOR} CACHE STRING "Number of threads")
-  ELSE()
-    SET(BUILD_WITH_NTHREADS "4" CACHE STRING "Number of threads") # Default setting
+  # If BUILD_WITH_NTHREADS defined, use the value - otherwise detect
+  IF(NOT DEFINED BUILD_WITH_NTHREADS)
+    INCLUDE(ProcessorCount)
+    ProcessorCount(NPROCESSOR)
+    IF(NOT NPROCESSOR EQUAL 0)
+      MATH(EXPR NPROCESSOR ${NPROCESSOR}/2)
+      SET(BUILD_WITH_NTHREADS ${NPROCESSOR} CACHE STRING "Number of threads")
+    ELSE()
+      SET(BUILD_WITH_NTHREADS "4" CACHE STRING "Number of threads") # Default setting
+    ENDIF()
   ENDIF()
-
   string(REGEX MATCH "^[0-9]+$" BUILD_WITH_NTHREADS  ${BUILD_WITH_NTHREADS})
   IF(NOT BUILD_WITH_NTHREADS MATCHES "^[0-9]+$")
     SET(BUILD_WITH_NTHREADS 4) # Default setting 4.
-    MESSAGE(WARNING "the number of threads have to be an interger value, set to ${BUILD_WITH_NTHREADS}")
+    MESSAGE(WARNING "The number of threads has to be an integer value, set to ${BUILD_WITH_NTHREADS}")
   ENDIF()
 ENDIF()
 
