@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, University of Edinburgh
+// Copyright (C) 2019-2022, University of Edinburgh, Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -187,16 +187,15 @@ class BoxQP {
   std::size_t nc_;              //!< Constrained space dimension
   std::vector<double> alphas_;  //!< Set of step lengths using by the line-search procedure
   Eigen::VectorXd x_;           //!< Guess of the decision variable
-  Eigen::VectorXd xnew_;        //!< New decision variable guess
+  Eigen::VectorXd xnew_;        //!< New decision vector
   Eigen::VectorXd g_;           //!< Current gradient
   Eigen::VectorXd dx_;          //!< Current search direction
 
-  Eigen::VectorXd qf_;                       //!< Current problem gradient in the free subspace
-  Eigen::VectorXd xf_;                       //!< Current decision variable in the free subspace
-  Eigen::VectorXd xc_;                       //!< Current decision variable in the constrained subspace
-  Eigen::VectorXd dxf_;                      //!< Search direction in the free subspace
-  Eigen::MatrixXd Hff_;                      //!< Hessian in the free subspace
-  Eigen::MatrixXd Hfc_;                      //!< Hessian in the constrained subspace
+  Eigen::VectorXd xo_;   //!< Organized decision
+  Eigen::VectorXd dxo_;  //!< Search direction organized by free and constrained subspaces
+  Eigen::VectorXd qo_;   //!< Gradient organized by free and constrained subspaces
+  Eigen::MatrixXd Ho_;   //!< Hessian organized by free and constrained subspaces
+
   Eigen::LLT<Eigen::MatrixXd> Hff_inv_llt_;  //!< Cholesky solver
 };
 

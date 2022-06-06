@@ -11,11 +11,12 @@
 
 #include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/integ-action-base.hpp"
+#include "crocoddyl/core/utils/deprecate.hpp"
 
 namespace crocoddyl {
 
 /**
- * @brief Semi-implicit RK4 integrator
+ * @brief Standard RK4 integrator
  *
  * It applies a standard RK4 integration scheme to a differential (i.e., continuous time) action model.
  *
@@ -25,7 +26,7 @@ namespace crocoddyl {
  * to use \f$\mathbf{w}\f$ to refer to the control inputs of the differential model and \f$\mathbf{u}\f$ for the
  * control inputs of the integrated action model.
  *
- * \sa `calc()`, `calcDiff()`, `createData()`
+ * \sa `IntegratedActionModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
  */
 template <typename _Scalar>
 class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Scalar> {
@@ -50,9 +51,10 @@ class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Sca
    * @param[in] time_step  Step time (default 1e-3)
    * @param[in] with_cost_residual  Compute cost residual (default true)
    */
-  IntegratedActionModelRK4Tpl(boost::shared_ptr<DifferentialActionModelAbstract> model,
-                              boost::shared_ptr<ControlParametrizationModelAbstract> control,
-                              const Scalar time_step = Scalar(1e-3), const bool with_cost_residual = true);
+  DEPRECATED("Use IntegratedActionModelRK",
+             IntegratedActionModelRK4Tpl(boost::shared_ptr<DifferentialActionModelAbstract> model,
+                                         boost::shared_ptr<ControlParametrizationModelAbstract> control,
+                                         const Scalar time_step = Scalar(1e-3), const bool with_cost_residual = true);)
 
   /**
    * @brief Initialize the RK4 integrator
@@ -63,14 +65,15 @@ class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Sca
    * @param[in] time_step  Step time (default 1e-3)
    * @param[in] with_cost_residual  Compute cost residual (default true)
    */
-  IntegratedActionModelRK4Tpl(boost::shared_ptr<DifferentialActionModelAbstract> model,
-                              const Scalar time_step = Scalar(1e-3), const bool with_cost_residual = true);
+  DEPRECATED("Use IntegratedActionModelRK",
+             IntegratedActionModelRK4Tpl(boost::shared_ptr<DifferentialActionModelAbstract> model,
+                                         const Scalar time_step = Scalar(1e-3), const bool with_cost_residual = true);)
   virtual ~IntegratedActionModelRK4Tpl();
 
   /**
    * @brief Integrate the differential action model using RK4 scheme
    *
-   * @param[in] data  Semi-implicit RK4 data
+   * @param[in] data  RK4 integrator data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
@@ -83,7 +86,7 @@ class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Sca
    * It computes the total cost and defines the next state as the current one. This function is used in the
    * terminal nodes of an optimal control problem.
    *
-   * @param[in] data  Action data
+   * @param[in] data  RK4 integrator data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
   virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
@@ -91,7 +94,7 @@ class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Sca
   /**
    * @brief Compute the partial derivatives of the RK4 integrator
    *
-   * @param[in] data  Semi-implicit RK4 data
+   * @param[in] data  RK4 integrator data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
@@ -104,15 +107,15 @@ class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Sca
    * It updates the derivatives of the cost function with respect to the state only. This function is used in
    * the terminal nodes of an optimal control problem.
    *
-   * @param[in] data  Action data
+   * @param[in] data  RK4 integrator data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
   virtual void calcDiff(const boost::shared_ptr<ActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
 
   /**
-   * @brief Create the RK4 data
+   * @brief Create the RK4 integrator data
    *
-   * @return the RK4 data
+   * @return the RK4 integrator data
    */
   virtual boost::shared_ptr<ActionDataAbstract> createData();
 
@@ -127,7 +130,7 @@ class IntegratedActionModelRK4Tpl : public IntegratedActionModelAbstractTpl<_Sca
    * The quasic static commands are the ones produced for a the reference posture as an equilibrium point, i.e.
    * for \f$\mathbf{f^q_x}\delta\mathbf{q}+\mathbf{f_u}\delta\mathbf{u}=\mathbf{0}\f$
    *
-   * @param[in] data    Action data
+   * @param[in] data    RK4 integrator data
    * @param[out] u      Quasic static commands
    * @param[in] x       State point (velocity has to be zero)
    * @param[in] maxiter Maximum allowed number of iterations
@@ -244,7 +247,7 @@ struct IntegratedActionDataRK4Tpl : public IntegratedActionDataAbstractTpl<_Scal
   std::vector<MatrixXs> ddli_dxdu;  //!< List of second partial derivatives of the cost with respect to the state and
                                     //!< control parameters of the RK4 integration. ddli_dxdu
   std::vector<MatrixXs> ddli_dwdu;  //!< List of second partial derivatives of the cost with respect to the control
-                                    //!< parameters and inputs control of the RK4 integration. ddli_dxdu
+                                    //!< parameters and inputs control of the RK4 integration. ddli_dwdu
 
   std::vector<MatrixXs> Luu_partialx;
   std::vector<MatrixXs> Lxu_i;

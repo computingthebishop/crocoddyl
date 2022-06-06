@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,6 +12,11 @@
 #include "crocoddyl/core/utils/deprecate.hpp"
 
 namespace crocoddyl {
+
+inline bool& enableMultithreading() {
+  static bool enable = true;
+  return enable;
+}
 
 enum AssignmentOp { setto, addto, rmfrom };
 
@@ -55,6 +60,11 @@ template <typename Scalar>
 class IntegratedActionModelEulerTpl;
 template <typename Scalar>
 struct IntegratedActionDataEulerTpl;
+
+template <typename Scalar>
+class IntegratedActionModelRKTpl;
+template <typename Scalar>
+struct IntegratedActionDataRKTpl;
 
 template <typename Scalar>
 class IntegratedActionModelRK4Tpl;
@@ -141,9 +151,9 @@ template <typename Scalar>
 struct ControlParametrizationDataPolyOneTpl;
 
 template <typename Scalar>
-class ControlParametrizationModelPolyTwoRK4Tpl;
+class ControlParametrizationModelPolyTwoRKTpl;
 template <typename Scalar>
-struct ControlParametrizationDataPolyTwoRK4Tpl;
+struct ControlParametrizationDataPolyTwoRKTpl;
 
 // actuation
 template <typename Scalar>
@@ -260,8 +270,10 @@ typedef IntegratedActionModelAbstractTpl<double> IntegratedActionModelAbstract;
 typedef IntegratedActionDataAbstractTpl<double> IntegratedActionDataAbstract;
 typedef IntegratedActionModelEulerTpl<double> IntegratedActionModelEuler;
 typedef IntegratedActionDataEulerTpl<double> IntegratedActionDataEuler;
-typedef IntegratedActionModelRK4Tpl<double> IntegratedActionModelRK4;
-typedef IntegratedActionDataRK4Tpl<double> IntegratedActionDataRK4;
+typedef IntegratedActionModelRKTpl<double> IntegratedActionModelRK;
+typedef IntegratedActionDataRKTpl<double> IntegratedActionDataRK;
+DEPRECATED("Use IntegratedActionModelRK", typedef IntegratedActionModelRK4Tpl<double> IntegratedActionModelRK4;)
+DEPRECATED("Use IntegratedActionModelRK", typedef IntegratedActionDataRK4Tpl<double> IntegratedActionDataRK4;)
 
 typedef ResidualModelAbstractTpl<double> ResidualModelAbstract;
 typedef ResidualDataAbstractTpl<double> ResidualDataAbstract;
@@ -299,8 +311,8 @@ typedef ControlParametrizationDataAbstractTpl<double> ControlParametrizationData
 typedef ControlParametrizationModelPolyZeroTpl<double> ControlParametrizationModelPolyZero;
 typedef ControlParametrizationModelPolyOneTpl<double> ControlParametrizationModelPolyOne;
 typedef ControlParametrizationDataPolyOneTpl<double> ControlParametrizationDataPolyOne;
-typedef ControlParametrizationModelPolyTwoRK4Tpl<double> ControlParametrizationModelPolyTwoRK4;
-typedef ControlParametrizationDataPolyTwoRK4Tpl<double> ControlParametrizationDataPolyTwoRK4;
+typedef ControlParametrizationModelPolyTwoRKTpl<double> ControlParametrizationModelPolyTwoRK;
+typedef ControlParametrizationDataPolyTwoRKTpl<double> ControlParametrizationDataPolyTwoRK;
 
 typedef ActuationDataAbstractTpl<double> ActuationDataAbstract;
 typedef ActuationModelAbstractTpl<double> ActuationModelAbstract;

@@ -26,6 +26,7 @@ void exposeCore() {
   exposeActuationSquashing();
   exposeDataCollectorActuation();
   exposeIntegratedActionEuler();
+  exposeIntegratedActionRK();
   exposeIntegratedActionRK4();
   exposeCostAbstract();
   exposeResidualControl();
@@ -35,12 +36,13 @@ void exposeCore() {
   exposeActionNumDiff();
   exposeDifferentialActionNumDiff();
   exposeActivationNumDiff();
+  exposeStateNumDiff();
   exposeShootingProblem();
   exposeSolverAbstract();
   exposeStateEuclidean();
   exposeControlParametrizationPolyZero();
   exposeControlParametrizationPolyOne();
-  exposeControlParametrizationPolyTwoRK4();
+  exposeControlParametrizationPolyTwoRK();
   exposeActionUnicycle();
   exposeActionLQR();
   exposeDifferentialActionLQR();
@@ -60,6 +62,7 @@ void exposeCore() {
   exposeSolverBoxQP();
   exposeSolverBoxDDP();
   exposeSolverBoxFDDP();
+  exposeSolverIpopt();
   exposeCallbacks();
   exposeStopWatch();
 }

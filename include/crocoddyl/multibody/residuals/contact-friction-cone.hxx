@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -14,12 +14,22 @@ template <typename Scalar>
 ResidualModelContactFrictionConeTpl<Scalar>::ResidualModelContactFrictionConeTpl(
     boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id, const FrictionCone& fref,
     const std::size_t nu)
-    : Base(state, fref.get_nf() + 1, nu, true, true, true), id_(id), fref_(fref) {}
+    : Base(state, fref.get_nf() + 1, nu, true, true, true), id_(id), fref_(fref) {
+  if (static_cast<pinocchio::FrameIndex>(state->get_pinocchio()->nframes) <= id) {
+    throw_pretty("Invalid argument: "
+                 << "the frame index is wrong (it does not exist in the robot)");
+  }
+}
 
 template <typename Scalar>
 ResidualModelContactFrictionConeTpl<Scalar>::ResidualModelContactFrictionConeTpl(
     boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id, const FrictionCone& fref)
-    : Base(state, fref.get_nf() + 1), id_(id), fref_(fref) {}
+    : Base(state, fref.get_nf() + 1), id_(id), fref_(fref) {
+  if (static_cast<pinocchio::FrameIndex>(state->get_pinocchio()->nframes) <= id) {
+    throw_pretty("Invalid argument: "
+                 << "the frame index is wrong (it does not exist in the robot)");
+  }
+}
 
 template <typename Scalar>
 ResidualModelContactFrictionConeTpl<Scalar>::~ResidualModelContactFrictionConeTpl() {}
@@ -50,12 +60,24 @@ void ResidualModelContactFrictionConeTpl<Scalar>::calcDiff(const boost::shared_p
   const MatrixXs& df_dx = d->contact->df_dx;
   const MatrixXs& df_du = d->contact->df_du;
   const MatrixX3s& A = fref_.get_A();
-  if (d->more_than_3_constraints) {
-    data->Rx.noalias() = A * df_dx.template topRows<3>();
-    data->Ru.noalias() = A * df_du.template topRows<3>();
-  } else {
-    data->Rx.noalias() = A * df_dx;
-    data->Ru.noalias() = A * df_du;
+
+  switch (d->contact_type) {
+    case Contact2D: {
+      // Valid for xz plane
+      data->Rx.noalias() = A.col(0) * df_dx.row(0) + A.col(2) * df_dx.row(1);
+      data->Ru.noalias() = A.col(0) * df_du.row(0) + A.col(2) * df_du.row(1);
+      break;
+    }
+    case Contact3D:
+      data->Rx.noalias() = A * df_dx;
+      data->Ru.noalias() = A * df_du;
+      break;
+    case Contact6D:
+      data->Rx.noalias() = A * df_dx.template topRows<3>();
+      data->Ru.noalias() = A * df_du.template topRows<3>();
+      break;
+    default:
+      break;
   }
 }
 

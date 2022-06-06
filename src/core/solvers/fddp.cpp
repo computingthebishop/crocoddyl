@@ -23,6 +23,9 @@ SolverFDDP::~SolverFDDP() {}
 bool SolverFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::vector<Eigen::VectorXd>& init_us,
                        const std::size_t maxiter, const bool is_feasible, const double reginit) {
   START_PROFILER("SolverFDDP::solve");
+  if (problem_->is_updated()) {
+    resizeData();
+  }
   xs_try_[0] = problem_->get_x0();  // it is needed in case that init_xs[0] is infeasible
   setCandidate(init_xs, init_us, is_feasible);
 
@@ -67,7 +70,7 @@ bool SolverFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::v
       dVexp_ = steplength_ * (d_[0] + 0.5 * steplength_ * d_[1]);
 
       if (dVexp_ >= 0) {  // descend direction
-        if (d_[0] < th_grad_ || dV_ > th_acceptstep_ * dVexp_) {
+        if (abs(d_[0]) < th_grad_ || dV_ > th_acceptstep_ * dVexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
           cost_prev_ = cost_;
@@ -76,7 +79,7 @@ bool SolverFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::v
           break;
         }
       } else {  // reducing the gaps by allowing a small increment in the cost value
-        if (dV_ > th_acceptnegstep_ * dVexp_) {
+        if (!is_feasible_ && dV_ > th_acceptnegstep_ * dVexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
           cost_prev_ = cost_;
@@ -127,6 +130,10 @@ const Eigen::Vector2d& SolverFDDP::expectedImprovement() {
   dv_ = 0;
   const std::size_t T = this->problem_->get_T();
   if (!is_feasible_) {
+    // NB: The dimension of vectors xs_try_ and xs_ are T+1, whereas the dimension of dx_ is T. Here, we are re-using
+    // the final element of dx_ for the computation of the difference at the terminal node. Using the access iterator
+    // back() this re-use of the final element is fine. Cf. the discussion at
+    // https://github.com/loco-3d/crocoddyl/issues/1022
     problem_->get_terminalModel()->get_state()->diff(xs_try_.back(), xs_.back(), dx_.back());
     fTVxx_p_.noalias() = Vxx_.back() * dx_.back();
     dv_ -= fs_.back().dot(fTVxx_p_);
@@ -156,8 +163,8 @@ void SolverFDDP::updateExpectedImprovement() {
   for (std::size_t t = 0; t < T; ++t) {
     const std::size_t nu = models[t]->get_nu();
     if (nu != 0) {
-      dg_ += Qu_[t].head(nu).dot(k_[t].head(nu));
-      dq_ -= k_[t].head(nu).dot(Quuk_[t].head(nu));
+      dg_ += Qu_[t].dot(k_[t]);
+      dq_ -= k_[t].dot(Quuk_[t]);
     }
     if (!is_feasible_) {
       dg_ -= Vx_[t].dot(fs_[t]);
@@ -187,8 +194,8 @@ void SolverFDDP::forwardPass(const double steplength) {
       xs_try_[t] = xnext_;
       m->get_state()->diff(xs_[t], xs_try_[t], dx_[t]);
       if (nu != 0) {
-        us_try_[t].head(nu).noalias() = us_[t].head(nu) - k_[t].head(nu) * steplength - K_[t].topRows(nu) * dx_[t];
-        m->calc(d, xs_try_[t], us_try_[t].head(nu));
+        us_try_[t].noalias() = us_[t] - k_[t] * steplength - K_[t] * dx_[t];
+        m->calc(d, xs_try_[t], us_try_[t]);
       } else {
         m->calc(d, xs_try_[t]);
       }
@@ -223,8 +230,8 @@ void SolverFDDP::forwardPass(const double steplength) {
       m->get_state()->integrate(xnext_, fs_[t] * (steplength - 1), xs_try_[t]);
       m->get_state()->diff(xs_[t], xs_try_[t], dx_[t]);
       if (nu != 0) {
-        us_try_[t].head(nu).noalias() = us_[t].head(nu) - k_[t].head(nu) * steplength - K_[t].topRows(nu) * dx_[t];
-        m->calc(d, xs_try_[t], us_try_[t].head(nu));
+        us_try_[t].noalias() = us_[t] - k_[t] * steplength - K_[t] * dx_[t];
+        m->calc(d, xs_try_[t], us_try_[t]);
       } else {
         m->calc(d, xs_try_[t]);
       }

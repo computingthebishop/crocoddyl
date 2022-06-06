@@ -63,6 +63,9 @@ void test_calc_returns_a_residual(ResidualModelTypes::Type residual_type, StateM
 
 void test_calc_against_numdiff(ResidualModelTypes::Type residual_type, StateModelTypes::Type state_type,
                                ActuationModelTypes::Type actuation_type) {
+#if BOOST_VERSION / 100 % 1000 >= 60
+  using namespace boost::placeholders;
+#endif
   // Create the model
   ResidualModelFactory residual_factory;
   ActuationModelFactory actuation_factory;
@@ -108,6 +111,9 @@ void test_calc_against_numdiff(ResidualModelTypes::Type residual_type, StateMode
 
 void test_partial_derivatives_against_numdiff(ResidualModelTypes::Type residual_type, StateModelTypes::Type state_type,
                                               ActuationModelTypes::Type actuation_type) {
+#if BOOST_VERSION / 100 % 1000 >= 60
+  using namespace boost::placeholders;
+#endif
   // Create the model
   ResidualModelFactory residual_factory;
   ActuationModelFactory actuation_factory;
@@ -195,7 +201,8 @@ bool init_function() {
         if (ActuationModelTypes::all[actuation_type] != ActuationModelTypes::ActuationModelMultiCopterBase) {
           register_residual_model_unit_tests(ResidualModelTypes::all[residual_type], StateModelTypes::all[state_type],
                                              ActuationModelTypes::all[actuation_type]);
-        } else if (StateModelTypes::all[state_type] != StateModelTypes::StateMultibody_TalosArm) {
+        } else if (StateModelTypes::all[state_type] != StateModelTypes::StateMultibody_TalosArm &&
+                   StateModelTypes::all[state_type] != StateModelTypes::StateMultibodyContact2D_TalosArm) {
           register_residual_model_unit_tests(ResidualModelTypes::all[residual_type], StateModelTypes::all[state_type],
                                              ActuationModelTypes::all[actuation_type]);
         }

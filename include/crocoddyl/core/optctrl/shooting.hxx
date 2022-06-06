@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, University of Oxford
+// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh, University of Oxford
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,7 +26,8 @@ ShootingProblemTpl<Scalar>::ShootingProblemTpl(
       nx_(running_models[0]->get_state()->get_nx()),
       ndx_(running_models[0]->get_state()->get_ndx()),
       nu_max_(running_models[0]->get_nu()),
-      nthreads_(1) {
+      nthreads_(1),
+      is_updated_(false) {
   for (std::size_t i = 1; i < T_; ++i) {
     const boost::shared_ptr<ActionModelAbstract>& model = running_models_[i];
     const std::size_t nu = model->get_nu();
@@ -60,7 +61,9 @@ ShootingProblemTpl<Scalar>::ShootingProblemTpl(
   allocateData();
 
 #ifdef CROCODDYL_WITH_MULTITHREADING
-  nthreads_ = CROCODDYL_WITH_NTHREADS;
+  if (enableMultithreading()) {
+    nthreads_ = CROCODDYL_WITH_NTHREADS;
+  }
 #endif
 }
 
@@ -120,7 +123,9 @@ ShootingProblemTpl<Scalar>::ShootingProblemTpl(
   }
 
 #ifdef CROCODDYL_WITH_MULTITHREADING
-  nthreads_ = CROCODDYL_WITH_NTHREADS;
+  if (enableMultithreading()) {
+    nthreads_ = CROCODDYL_WITH_NTHREADS;
+  }
 #endif
 }
 
@@ -158,7 +163,7 @@ Scalar ShootingProblemTpl<Scalar>::calc(const std::vector<VectorXs>& xs, const s
   for (std::size_t i = 0; i < T_; ++i) {
     const std::size_t nu = running_models_[i]->get_nu();
     if (nu != 0) {
-      running_models_[i]->calc(running_datas_[i], xs[i], us[i].head(nu));
+      running_models_[i]->calc(running_datas_[i], xs[i], us[i]);
     } else {
       running_models_[i]->calc(running_datas_[i], xs[i]);
     }
@@ -194,8 +199,7 @@ Scalar ShootingProblemTpl<Scalar>::calcDiff(const std::vector<VectorXs>& xs, con
 #endif
   for (std::size_t i = 0; i < T_; ++i) {
     if (running_models_[i]->get_nu() != 0) {
-      const std::size_t nu = running_models_[i]->get_nu();
-      running_models_[i]->calcDiff(running_datas_[i], xs[i], us[i].head(nu));
+      running_models_[i]->calcDiff(running_datas_[i], xs[i], us[i]);
     } else {
       running_models_[i]->calcDiff(running_datas_[i], xs[i]);
     }
@@ -232,10 +236,8 @@ void ShootingProblemTpl<Scalar>::rollout(const std::vector<VectorXs>& us, std::v
     const boost::shared_ptr<ActionModelAbstract>& model = running_models_[i];
     const boost::shared_ptr<ActionDataAbstract>& data = running_datas_[i];
     const VectorXs& x = xs[i];
-    const std::size_t nu = running_models_[i]->get_nu();
     if (model->get_nu() != 0) {
-      const VectorXs& u = us[i];
-      model->calc(data, x, u.head(nu));
+      model->calc(data, x, us[i]);
     } else {
       model->calc(data, x);
     }
@@ -269,8 +271,7 @@ void ShootingProblemTpl<Scalar>::quasiStatic(std::vector<VectorXs>& us, const st
 #pragma omp parallel for num_threads(nthreads_)
 #endif
   for (std::size_t i = 0; i < T_; ++i) {
-    const std::size_t nu = running_models_[i]->get_nu();
-    running_models_[i]->quasiStatic(running_datas_[i], us[i].head(nu), xs[i]);
+    running_models_[i]->quasiStatic(running_datas_[i], us[i], xs[i]);
   }
 }
 
@@ -301,11 +302,7 @@ void ShootingProblemTpl<Scalar>::circularAppend(boost::shared_ptr<ActionModelAbs
     throw_pretty("Invalid argument: "
                  << "ndx node is not consistent with the other nodes")
   }
-  if (model->get_nu() > nu_max_) {
-    throw_pretty("Invalid argument: "
-                 << "nu node is greater than the maximum nu")
-  }
-
+  is_updated_ = true;
   for (std::size_t i = 0; i < T_ - 1; ++i) {
     running_models_[i] = running_models_[i + 1];
     running_datas_[i] = running_datas_[i + 1];
@@ -324,11 +321,7 @@ void ShootingProblemTpl<Scalar>::circularAppend(boost::shared_ptr<ActionModelAbs
     throw_pretty("Invalid argument: "
                  << "ndx node is not consistent with the other nodes")
   }
-  if (model->get_nu() > nu_max_) {
-    throw_pretty("Invalid argument: "
-                 << "nu node is greater than the maximum nu")
-  }
-
+  is_updated_ = true;
   for (std::size_t i = 0; i < T_ - 1; ++i) {
     running_models_[i] = running_models_[i + 1];
     running_datas_[i] = running_datas_[i + 1];
@@ -357,11 +350,7 @@ void ShootingProblemTpl<Scalar>::updateNode(const std::size_t i, boost::shared_p
     throw_pretty("Invalid argument: "
                  << "ndx node is not consistent with the other nodes")
   }
-  if (model->get_nu() > nu_max_) {
-    throw_pretty("Invalid argument: "
-                 << "nu node is greater than the maximum nu")
-  }
-
+  is_updated_ = true;
   if (i == T_) {
     terminal_model_ = model;
     terminal_data_ = data;
@@ -385,11 +374,7 @@ void ShootingProblemTpl<Scalar>::updateModel(const std::size_t i, boost::shared_
     throw_pretty("Invalid argument: "
                  << "ndx is not consistent with the other nodes")
   }
-  if (model->get_nu() > nu_max_) {
-    throw_pretty("Invalid argument: "
-                 << "nu node is greater than the maximum nu")
-  }
-
+  is_updated_ = true;
   if (i == T_) {
     terminal_model_ = model;
     terminal_data_ = terminal_model_->createData();
@@ -465,12 +450,8 @@ void ShootingProblemTpl<Scalar>::set_runningModels(
       throw_pretty("Invalid argument: "
                    << "ndx in " << i << " node is not consistent with the other nodes")
     }
-    if (model->get_nu() > nu_max_) {
-      throw_pretty("Invalid argument: "
-                   << "nu node is greater than the maximum nu")
-    }
   }
-
+  is_updated_ = true;
   T_ = models.size();
   running_models_.clear();
   running_datas_.clear();
@@ -490,6 +471,7 @@ void ShootingProblemTpl<Scalar>::set_terminalModel(boost::shared_ptr<ActionModel
     throw_pretty("Invalid argument: "
                  << "ndx is not consistent with the other nodes")
   }
+  is_updated_ = true;
   terminal_model_ = model;
   terminal_data_ = terminal_model_->createData();
 }
@@ -506,6 +488,12 @@ void ShootingProblemTpl<Scalar>::set_nthreads(const int nthreads) {
     nthreads_ = CROCODDYL_WITH_NTHREADS;
   } else {
     nthreads_ = static_cast<std::size_t>(nthreads);
+  }
+  if (enableMultithreading()) {
+    std::cerr << "Warning: the number of threads won't affect the computational performance as multithreading "
+                 "support is not enabled."
+              << std::endl;
+    nthreads_ = 1;
   }
 #endif
 }
@@ -536,10 +524,17 @@ std::size_t ShootingProblemTpl<Scalar>::get_nthreads() const {
 }
 
 template <typename Scalar>
+bool ShootingProblemTpl<Scalar>::is_updated() {
+  const bool status = is_updated_;
+  is_updated_ = false;
+  return status;
+}
+
+template <typename Scalar>
 std::ostream& operator<<(std::ostream& os, const ShootingProblemTpl<Scalar>& problem) {
   os << "ShootingProblem (T=" << problem.get_T() << ", nx=" << problem.get_nx() << ", ndx=" << problem.get_ndx()
-     << ", nu_max=" << problem.get_nu_max() << ") " << std::endl;
-  os << "  Models:" << std::endl;
+     << ") " << std::endl
+     << "  Models:" << std::endl;
   const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstractTpl<Scalar> > >& runningModels =
       problem.get_runningModels();
   for (std::size_t t = 0; t < problem.get_T(); ++t) {

@@ -15,6 +15,7 @@
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/frames.hpp>
 
+#include "crocoddyl/multibody/contacts/contact-1d.hpp"
 #include "crocoddyl/multibody/contacts/contact-2d.hpp"
 #include "crocoddyl/multibody/contacts/contact-3d.hpp"
 #include "crocoddyl/multibody/contacts/contact-6d.hpp"
@@ -145,6 +146,9 @@ void test_update_force_diff(ContactModelTypes::Type contact_type, PinocchioModel
 
 void test_partial_derivatives_against_numdiff(ContactModelTypes::Type contact_type,
                                               PinocchioModelTypes::Type model_type) {
+#if BOOST_VERSION / 100 % 1000 >= 60
+  using namespace boost::placeholders;
+#endif
   // create the model
   ContactModelFactory factory;
   boost::shared_ptr<crocoddyl::ContactModelAbstract> model = factory.create(contact_type, model_type);

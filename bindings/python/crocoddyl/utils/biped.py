@@ -13,6 +13,7 @@ class SimpleBipedGaitProblem:
     through a strict process of deprecation.
     Thus, we advice any user to DO NOT develop their application based on this class.
     """
+
     def __init__(self, rmodel, rightFoot, leftFoot, integrator='euler', control='zero'):
         """ Construct biped-gait problem.
 
@@ -33,7 +34,9 @@ class SimpleBipedGaitProblem:
         if control == 'one':
             self.control = crocoddyl.ControlParametrizationModelPolyOne(self.actuation.nu)
         elif control == 'rk4':
-            self.control = crocoddyl.ControlParametrizationModelPolyTwoRK4(self.actuation.nu)
+            self.control = crocoddyl.ControlParametrizationModelPolyTwoRK(self.actuation.nu, crocoddyl.RKType.four)
+        elif control == 'rk3':
+            self.control = crocoddyl.ControlParametrizationModelPolyTwoRK(self.actuation.nu, crocoddyl.RKType.three)
         else:
             self.control = crocoddyl.ControlParametrizationModelPolyZero(self.actuation.nu)
         # Defining default state
@@ -214,7 +217,7 @@ class SimpleBipedGaitProblem:
             supportContactModel = \
                 crocoddyl.ContactModel6D(self.state, i,
                                          pinocchio.SE3.Identity(),
-                                         nu, np.array([0., 0.]))
+                                         nu, np.array([0., 50.]))
             contactModel.addContact(self.rmodel.frames[i].name + "_contact", supportContactModel)
 
         # Creating the cost model for a contact phase
@@ -252,7 +255,13 @@ class SimpleBipedGaitProblem:
         if self.integrator == 'euler':
             model = crocoddyl.IntegratedActionModelEuler(dmodel, self.control, timeStep)
         elif self.integrator == 'rk4':
-            model = crocoddyl.IntegratedActionModelRK4(dmodel, self.control, timeStep)
+            model = crocoddyl.IntegratedActionModelRK(dmodel, self.control, crocoddyl.RKType.four, timeStep)
+        elif self.integrator == 'rk3':
+            model = crocoddyl.IntegratedActionModelRK(dmodel, self.control, crocoddyl.RKType.three, timeStep)
+        elif self.integrator == 'rk2':
+            model = crocoddyl.IntegratedActionModelRK(dmodel, self.control, crocoddyl.RKType.two, timeStep)
+        else:
+            model = crocoddyl.IntegratedActionModelEuler(dmodel, self.control, timeStep)
         return model
 
     def createFootSwitchModel(self, supportFootIds, swingFootTask, pseudoImpulse=True):
@@ -282,7 +291,7 @@ class SimpleBipedGaitProblem:
         contactModel = crocoddyl.ContactModelMultiple(self.state, nu)
         for i in supportFootIds:
             supportContactModel = crocoddyl.ContactModel6D(self.state, i, pinocchio.SE3.Identity(), nu,
-                                                           np.array([0., 0.]))
+                                                           np.array([0., 50.]))
             contactModel.addContact(self.rmodel.frames[i].name + "_contact", supportContactModel)
 
         # Creating the cost model for a contact phase
@@ -320,7 +329,13 @@ class SimpleBipedGaitProblem:
         if self.integrator == 'euler':
             model = crocoddyl.IntegratedActionModelEuler(dmodel, 0.)
         elif self.integrator == 'rk4':
-            model = crocoddyl.IntegratedActionModelRK4(dmodel, 0.)
+            model = crocoddyl.IntegratedActionModelRK(dmodel, crocoddyl.RKType.four, 0.)
+        elif self.integrator == 'rk3':
+            model = crocoddyl.IntegratedActionModelRK(dmodel, crocoddyl.RKType.three, 0.)
+        elif self.integrator == 'rk2':
+            model = crocoddyl.IntegratedActionModelRK(dmodel, crocoddyl.RKType.two, 0.)
+        else:
+            model = crocoddyl.IntegratedActionModelEuler(dmodel, 0.)
         return model
 
     def createImpulseModel(self, supportFootIds, swingFootTask):
