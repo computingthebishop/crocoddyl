@@ -19,10 +19,13 @@ SolverDDP::SolverDDP(boost::shared_ptr<ShootingProblem> problem)
       reg_decfactor_(10.),
       reg_min_(1e-9),
       reg_max_(1e9),
+      cost_prev_(0.),
       cost_try_(0.),
       th_grad_(1e-12),
       th_stepdec_(0.5),
       th_stepinc_(0.01) {
+  stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaQuNorm, this);
+  stopping_test_ = std::bind(&SolverDDP::stoppingTestFeasible, this);
   allocateData();
 
   const std::size_t n_alphas = 10;
@@ -91,6 +94,7 @@ bool SolverDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::ve
         if (abs(d_[0]) < th_grad_ || !is_feasible_ || dV_ > th_acceptstep_ * dVexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, true);
+          cost_prev_ = cost_;
           cost_ = cost_try_;
           recalcDiff = true;
           break;
@@ -116,8 +120,7 @@ bool SolverDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::ve
       callback(*this);
     }
 
-    if (was_feasible_ && stop_ < th_stop_) {
-      STOP_PROFILER("SolverDDP::solve");
+    if (stoppingTest()) {
       return true;
     }
   }
@@ -141,7 +144,7 @@ double SolverDDP::tryStep(const double steplength) {
   return cost_ - cost_try_;
 }
 
-double SolverDDP::stoppingCriteria() {
+double SolverDDP::stoppingCriteriaQuNorm() {
   stop_ = 0.;
   const std::size_t T = this->problem_->get_T();
   const std::vector<boost::shared_ptr<ActionModelAbstract> >& models = problem_->get_runningModels();
@@ -154,6 +157,18 @@ double SolverDDP::stoppingCriteria() {
   }
   return stop_;
 }
+
+double SolverDDP::stoppingCriteriaCostReduction() {
+  stop_ = 0.;
+  stop_ = std::abs(cost_ - cost_prev_) / cost_;
+  return stop_;
+}
+
+double SolverDDP::stoppingCriteria() { return stopping_criteria_(); }
+
+bool SolverDDP::stoppingTestFeasible() { return (was_feasible_ && stop_ < th_stop_); }
+
+bool SolverDDP::stoppingTest() { return stopping_test_(); }
 
 const Eigen::Vector2d& SolverDDP::expectedImprovement() {
   d_.fill(0);
@@ -568,6 +583,20 @@ void SolverDDP::set_th_grad(const double th_grad) {
                  << "th_grad value has to be positive.");
   }
   th_grad_ = th_grad;
+}
+
+void SolverDDP::set_stoppingCriteria(SolverDDP::StoppingType stop_type) {
+  switch (stop_type) {
+    case SolverDDP::StopCriteriaQuNorm:
+      stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaQuNorm, this);
+      break;
+    case SolverDDP::StopCriteriaCostReduction:
+      stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaCostReduction, this);
+      break;
+    default:
+      stopping_criteria_ = std::bind(&SolverDDP::stoppingCriteriaQuNorm, this);
+      break;
+  }
 }
 
 }  // namespace crocoddyl

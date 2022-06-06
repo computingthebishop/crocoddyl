@@ -48,6 +48,16 @@ void exposeSquashingAbstract() {
           "s_ub",
           bp::make_function(&SquashingModelAbstract_wrap::get_s_ub, bp::return_value_policy<bp::return_by_value>()),
           bp::make_function(&SquashingModelAbstract_wrap::set_s_ub),
+          "upper bound for the active zone of the squashing function")
+      .add_property(
+          "u_lb",
+          bp::make_function(&SquashingModelAbstract_wrap::get_u_lb, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_function(&SquashingModelAbstract_wrap::set_u_lb),
+          "lower bound for the active zone of the squashing function")
+      .add_property(
+          "u_ub",
+          bp::make_function(&SquashingModelAbstract_wrap::get_u_ub, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_function(&SquashingModelAbstract_wrap::set_u_ub),
           "upper bound for the active zone of the squashing function");
 
   bp::register_ptr_to_python<boost::shared_ptr<SquashingDataAbstract> >();

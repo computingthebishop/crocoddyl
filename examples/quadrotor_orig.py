@@ -14,24 +14,17 @@ WITHPLOT = True
 hector = example_robot_data.load('hector')
 robot_model = hector.model
 
-target_pos = np.array([2., 0., 1.])
+target_pos = np.array([1.5, 0., 1.])
 target_quat = pinocchio.Quaternion(1., 0., 0., 0.)
 wp1_pos = np.array([0., -3., 1.])
 wp1_quat = pinocchio.Quaternion(1., 0., 0., 0.)
-motor_time_ct = 0.01
 
-rotors = 4
-state = crocoddyl.StateMultibodyActuated(robot_model,rotors) # create state model from pinocchio model
+state = crocoddyl.StateMultibody(robot_model)
 
-d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., -5.0
-tau_f = np.array([[0., 0., 0., 0.], 
-                  [0., 0., 0., 0.], 
-                  [1., 1., 1., 1.], 
-                  [0., d_cog, 0., -d_cog],
-                  [-d_cog, 0., d_cog, 0.], 
-                  [-cm / cf, cm / cf, -cm / cf, cm / cf]])
-                  
-actuation = crocoddyl.ActuationModelMultiCopterBaseFos(state, tau_f) # using custom actuator class
+d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5., 0.1
+tau_f = np.array([[0., 0., 0., 0.], [0., 0., 0., 0.], [1., 1., 1., 1.], [0., d_cog, 0., -d_cog],
+                  [-d_cog, 0., d_cog, 0.], [-cm / cf, cm / cf, -cm / cf, cm / cf]])
+actuation = crocoddyl.ActuationModelMultiCopterBase(state, tau_f)
 
 nu = actuation.nu
 runningCostModel = crocoddyl.CostModelSum(state, nu)
@@ -40,42 +33,29 @@ terminalCostModel = crocoddyl.CostModelSum(state, nu)
 
 # Costs
 xResidual = crocoddyl.ResidualModelState(state, state.zero(), nu)
-#weights = np.array(([0.1] * 3) + ([1000.] * 3) + ([0.01] * 2 * rotors) + ([1000.] * robot_model.nv) + ([0.01] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
-weights = np.array(([0.1] * 3) + 
-                  ([1000.] * 3) + 
-                  ([0.0] * rotors) + 
-                  ([1000.] * robot_model.nv) + 
-                  ([0.001] * rotors))  # x y z rx ry rz (a+bi)theta1...4 vx vy vz vrx vry vrz w1...4
-                 # x y z rx ry rz   vx vy vz vrx vry vrz
-xActivation = crocoddyl.ActivationModelWeightedQuad(weights)
-
-
+xActivation = crocoddyl.ActivationModelWeightedQuad(np.array([0.1] * 3 + [1000.] * 3 + [1000.] * robot_model.nv))
 uResidual = crocoddyl.ResidualModelControl(state, nu)
 xRegCost = crocoddyl.CostModelResidual(state, xActivation, xResidual)
 uRegCost = crocoddyl.CostModelResidual(state, uResidual)
-
-
-wp1Residual = crocoddyl.ResidualModelFramePlacementAugmented(state, robot_model.getFrameId("base_link"),
+wp1Residual = crocoddyl.ResidualModelFramePlacement(state, robot_model.getFrameId("base_link"),
                                                             pinocchio.SE3(wp1_quat.matrix(), wp1_pos), nu)
 wp1TrackingCost = crocoddyl.CostModelResidual(state, wp1Residual)
-
-goalTrackingResidual = crocoddyl.ResidualModelFramePlacementAugmented(state, robot_model.getFrameId("base_link"),
-                                                            pinocchio.SE3(target_quat.matrix(), target_pos), nu)
+goalTrackingResidual = crocoddyl.ResidualModelFramePlacement(state, robot_model.getFrameId("base_link"),
+                                                             pinocchio.SE3(target_quat.matrix(), target_pos), nu)
 goalTrackingCost = crocoddyl.CostModelResidual(state, goalTrackingResidual)
-
 runningCostModel.addCost("xReg", xRegCost, 1e-6)
-runningCostModel.addCost("uReg", uRegCost, 1e-5)
+runningCostModel.addCost("uReg", uRegCost, 1e-6)
 # runningCostModel.addCost("trackPose", goalTrackingCost, 1e-2)
 wp1CostModel.addCost("wp1",wp1TrackingCost, 3e-1)
 terminalCostModel.addCost("goalPose", goalTrackingCost, 3.)
 
 dt = 9e-3
 runningModel = crocoddyl.IntegratedActionModelEuler(
-    crocoddyl.DifferentialActionModelFreeFwdDynamicsActuated(state, actuation, runningCostModel, motor_time_ct), dt)
+    crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, runningCostModel), dt)
 wp1_Model = crocoddyl.IntegratedActionModelEuler(
-    crocoddyl.DifferentialActionModelFreeFwdDynamicsActuated(state, actuation, wp1CostModel, motor_time_ct), dt)
+    crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, wp1CostModel), dt)
 terminalModel = crocoddyl.IntegratedActionModelEuler(
-    crocoddyl.DifferentialActionModelFreeFwdDynamicsActuated(state, actuation, terminalCostModel, motor_time_ct), dt)
+    crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, terminalCostModel), dt)
 # runningModel = crocoddyl.IntegratedActionModelRK4(
 #     crocoddyl.DifferentialActionModelFreeFwdDynamics(state, actuation, runningCostModel), dt)
 # wp1_Model = crocoddyl.IntegratedActionModelRK4(
@@ -88,8 +68,6 @@ runningModel.u_ub = np.array([u_lim, u_lim, u_lim, u_lim])
 
 # Creating the shooting problem and the FDDP solver
 T = 330
-initial_state = np.concatenate([hector.q0, ([0, 1] * rotors), np.zeros(state.nv)])
-
 models_arr = []
 for i in range(T):
     if i == int(T/2):
@@ -97,33 +75,30 @@ for i in range(T):
     else:
         models_arr.append(runningModel)
 
-problem = crocoddyl.ShootingProblem(initial_state, [runningModel]*T, terminalModel)
-solver = crocoddyl.SolverFDDP(problem)
-# solver = crocoddyl.SolverBoxFDDP(problem)
+problem = crocoddyl.ShootingProblem(np.concatenate([hector.q0, np.zeros(state.nv)]), models_arr, terminalModel)
+# solver = crocoddyl.SolverFDDP(problem)
+solver = crocoddyl.SolverBoxFDDP(problem)
 
 solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 
 cameraTF = [-0.03, 6.6, 3.3, -0.02, 0.56, 0.83, -0.03]
-
 if WITHDISPLAY and WITHPLOT:
     display = crocoddyl.GepettoDisplay(hector, 4, 4, cameraTF)
-    solver.setCallbacks([crocoddyl.CallbackVerbose(), crocoddyl.CallbackLogger(), crocoddyl.CallbackDisplay(display)])
+    solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)])
 elif WITHDISPLAY:
     display = crocoddyl.GepettoDisplay(hector, 4, 4, cameraTF)
     solver.setCallbacks([crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)])
 elif WITHPLOT:
-    solver.setCallbacks([crocoddyl.CallbackVerbose(), crocoddyl.CallbackLogger()])
+    solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 else:
     solver.setCallbacks([crocoddyl.CallbackVerbose()])
-solver.getCallbacks()[0].precision = 3
-solver.getCallbacks()[0].level = crocoddyl.VerboseLevel._2
 
 # Solving the problem with the FDDP solver
 solver.solve()
 
 # Plotting the entire motion
 if WITHPLOT:
-    log = solver.getCallbacks()[1]
+    log = solver.getCallbacks()[0]
     crocoddyl.plotOCSolution(log.xs, log.us, figIndex=1, show=False)
     crocoddyl.plotConvergence(log.costs, log.u_regs, log.x_regs, log.stops, log.grads, log.steps, figIndex=2)
 

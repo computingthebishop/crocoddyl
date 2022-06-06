@@ -17,9 +17,11 @@ void exposeMultibody() {
   exposeWrenchCone();
   exposeCoPSupport();
   exposeStateMultibody();
+  exposeStateMultibodyActuated(); 
   exposeActuationFloatingBase();
   exposeActuationFull();
   exposeActuationModelMultiCopterBase();
+  exposeActuationModelMultiCopterBaseFos(); 
   exposeForceAbstract();
   exposeContactAbstract();
   exposeImpulseAbstract();
@@ -30,6 +32,7 @@ void exposeMultibody() {
   exposeDataCollectorImpulses();
   exposeDifferentialActionFreeFwdDynamics();
   exposeDifferentialActionContactFwdDynamics();
+  exposeDifferentialActionFreeFwdDynamicsActuated();
   exposeActionImpulseFwdDynamics();
   exposeResidualState();
   exposeResidualCentroidalMomentum();
@@ -40,10 +43,14 @@ void exposeMultibody() {
   exposeResidualContactWrenchCone();
   exposeResidualContactControlGrav();
   exposeResidualControlGrav();
+  exposeResidualFrameAxisAlignment();
+  exposeResidualFrameCollision();
   exposeResidualFramePlacement();
+  exposeResidualFramePlacementAugmented();
   exposeResidualFrameRotation();
   exposeResidualFrameTranslation();
   exposeResidualFrameVelocity();
+  exposeResidualFrameVelocityAugmented();
   exposeResidualImpulseCoM();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL

@@ -24,6 +24,9 @@ class ActuationModelFullTpl;
 template <typename Scalar>
 class ActuationModelMultiCopterBaseTpl;
 
+template <typename Scalar>
+class ActuationModelMultiCopterBaseFosTpl;
+
 // force
 template <typename Scala>
 struct ForceDataAbstractTpl;
@@ -50,6 +53,9 @@ template <typename Scalar>
 class DifferentialActionModelContactFwdDynamicsTpl;
 template <typename Scalar>
 struct DifferentialActionDataContactFwdDynamicsTpl;
+
+template <typename Scalar>
+class DifferentialActionModelFreeFwdDynamicsActuatedTpl;
 
 // numdiff
 template <typename Scalar>
@@ -129,9 +135,24 @@ template <typename Scalar>
 struct ResidualDataControlGravTpl;
 
 template <typename Scalar>
+class ResidualModelFrameAxisAlignmentTpl;
+template <typename Scalar>
+struct ResidualDataFrameAxisAlignmentTpl;
+
+template <typename Scalar>
+class ResidualModelFrameCollisionTpl;
+template <typename Scalar>
+struct ResidualDataFrameCollisionTpl;
+
+template <typename Scalar>
 class ResidualModelFramePlacementTpl;
 template <typename Scalar>
 struct ResidualDataFramePlacementTpl;
+
+template <typename Scalar>
+class ResidualModelFramePlacementAugmentedTpl;
+template <typename Scalar>
+struct ResidualDataFramePlacementAugmentedTpl;
 
 template <typename Scalar>
 class ResidualModelFrameRotationTpl;
@@ -147,6 +168,11 @@ template <typename Scalar>
 class ResidualModelFrameVelocityTpl;
 template <typename Scalar>
 struct ResidualDataFrameVelocityTpl;
+
+template <typename Scalar>
+class ResidualModelFrameVelocityAugmentedTpl;
+template <typename Scalar>
+struct ResidualDataFrameVelocityAugmentedTpl;
 
 template <typename Scalar>
 class ResidualModelImpulseCoMTpl;
@@ -180,6 +206,11 @@ template <typename Scalar>
 class CostModelCoMPositionTpl;
 template <typename Scalar>
 using CostDataCoMPositionTpl = CostDataResidualTpl<Scalar>;
+
+template <typename Scalar>
+class CostModelFrameAxisAlignmentTpl;
+template <typename Scalar>
+using CostDataFrameAxisAlignmentTpl = CostDataResidualTpl<Scalar>;
 
 template <typename Scalar>
 class CostModelFramePlacementTpl;
@@ -304,6 +335,9 @@ class CoPSupportTpl;
 template <typename Scalar>
 class StateMultibodyTpl;
 
+template <typename Scalar>
+class StateMultibodyActuatedTpl;
+
 // data collector
 template <typename Scalar>
 struct DataCollectorMultibodyTpl;
@@ -349,6 +383,7 @@ struct ImpulseDataMultipleTpl;
 typedef ActuationModelFloatingBaseTpl<double> ActuationModelFloatingBase;
 typedef ActuationModelFullTpl<double> ActuationModelFull;
 typedef ActuationModelMultiCopterBaseTpl<double> ActuationModelMultiCopterBase;
+typedef ActuationModelMultiCopterBaseFosTpl<double> ActuationModelMultiCopterBaseFos;
 
 typedef ForceDataAbstractTpl<double> ForceDataAbstract;
 
@@ -362,6 +397,7 @@ typedef DifferentialActionModelFreeFwdDynamicsTpl<double> DifferentialActionMode
 typedef DifferentialActionDataFreeFwdDynamicsTpl<double> DifferentialActionDataFreeFwdDynamics;
 typedef DifferentialActionModelContactFwdDynamicsTpl<double> DifferentialActionModelContactFwdDynamics;
 typedef DifferentialActionDataContactFwdDynamicsTpl<double> DifferentialActionDataContactFwdDynamics;
+typedef DifferentialActionModelFreeFwdDynamicsActuatedTpl<double> DifferentialActionModelFreeFwdDynamicsActuated;
 
 typedef CostModelNumDiffTpl<double> CostModelNumDiff;
 typedef CostDataNumDiffTpl<double> CostDataNumDiff;
@@ -397,14 +433,22 @@ typedef ResidualModelContactControlGravTpl<double> ResidualModelContactControlGr
 typedef ResidualDataContactControlGravTpl<double> ResidualDataContactControlGrav;
 typedef ResidualModelControlGravTpl<double> ResidualModelControlGrav;
 typedef ResidualDataControlGravTpl<double> ResidualDataControlGrav;
+typedef ResidualModelFrameAxisAlignmentTpl<double> ResidualModelFrameAxisAlignment;
+typedef ResidualDataFrameAxisAlignmentTpl<double> ResidualDataFrameAxisAlignment;
+typedef ResidualModelFrameCollisionTpl<double> ResidualModelFrameCollision;
+typedef ResidualDataFrameCollisionTpl<double> ResidualDataFrameCollision;
 typedef ResidualModelFramePlacementTpl<double> ResidualModelFramePlacement;
 typedef ResidualDataFramePlacementTpl<double> ResidualDataFramePlacement;
+typedef ResidualModelFramePlacementAugmentedTpl<double> ResidualModelFramePlacementAugmented;
+typedef ResidualDataFramePlacementAugmentedTpl<double> ResidualDataFramePlacementAugmented;
 typedef ResidualModelFrameRotationTpl<double> ResidualModelFrameRotation;
 typedef ResidualDataFrameRotationTpl<double> ResidualDataFrameRotation;
 typedef ResidualModelFrameTranslationTpl<double> ResidualModelFrameTranslation;
 typedef ResidualDataFrameTranslationTpl<double> ResidualDataFrameTranslation;
 typedef ResidualModelFrameVelocityTpl<double> ResidualModelFrameVelocity;
 typedef ResidualDataFrameVelocityTpl<double> ResidualDataFrameVelocity;
+typedef ResidualModelFrameVelocityAugmentedTpl<double> ResidualModelFrameVelocityAugmented;
+typedef ResidualDataFrameVelocityAugmentedTpl<double> ResidualDataFrameVelocityAugmented;
 typedef ResidualModelImpulseCoMTpl<double> ResidualModelImpulseCoM;
 typedef ResidualDataImpulseCoMTpl<double> ResidualDataImpulseCoM;
 typedef ResidualModelStateTpl<double> ResidualModelState;
@@ -488,6 +532,7 @@ typedef ContactModel6DTpl<double> ContactModel6D;
 typedef ContactData6DTpl<double> ContactData6D;
 
 typedef StateMultibodyTpl<double> StateMultibody;
+typedef StateMultibodyActuatedTpl<double> StateMultibodyActuated;
 
 typedef DataCollectorMultibodyTpl<double> DataCollectorMultibody;
 typedef DataCollectorActMultibodyTpl<double> DataCollectorActMultibody;

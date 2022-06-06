@@ -47,8 +47,14 @@ class SquashingModelAbstractTpl {
   const VectorXs& get_s_lb() const { return s_lb_; };
   const VectorXs& get_s_ub() const { return s_ub_; };
 
+  const VectorXs& get_u_lb() const { return u_lb_; };
+  const VectorXs& get_u_ub() const { return u_ub_; };
+
   void set_s_lb(const VectorXs& s_lb) { s_lb_ = s_lb; };
   void set_s_ub(const VectorXs& s_ub) { s_ub_ = s_ub; };
+
+  void set_u_lb(const VectorXs& u_lb) { u_lb_ = u_lb; };
+  void set_u_ub(const VectorXs& u_ub) { u_ub_ = u_ub; };
 
  protected:
   std::size_t ns_;

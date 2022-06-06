@@ -112,7 +112,7 @@ void CostModelSumTpl<Scalar>::calc(const boost::shared_ptr<CostDataSum>& data, c
       assert_pretty(it_m->first == it_d->first, "it doesn't match the cost name between model and data ("
                                                     << it_m->first << " != " << it_d->first << ")");
 
-      m_i->cost->calc(d_i, x, u);
+      m_i->cost->calc(d_i, x, u); //error here
       data->cost += m_i->weight * d_i->cost;
     }
   }

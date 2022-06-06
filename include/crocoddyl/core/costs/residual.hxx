@@ -27,7 +27,16 @@ template <typename Scalar>
 void CostModelResidualTpl<Scalar>::calc(const boost::shared_ptr<CostDataAbstract>& data,
                                         const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
   // Compute the cost residual
-  residual_->calc(data->residual, x, u);
+  try
+  {
+    residual_->calc(data->residual, x, u);
+  }
+  catch(const std::exception& e)
+  {
+    std::cerr << "Error Compute the cost residual" << std::endl;
+    std::cerr << e.what() << '\n';
+  }
+  
 
   // Compute the cost
   activation_->calc(data->activation, data->residual->r);
