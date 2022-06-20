@@ -184,8 +184,8 @@ void StateMultibodyActuatedTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& 
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_-(2*nr_)), x1.head(nq_-(2*nr_)), Jsecond.topLeftCorner(nv_-nr_, nv_-nr_),
                            pinocchio::ARG1);
     Jfirst.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;      //wrt x0
-    Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)-1;     //wrt x1
-    Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
+    Jfirst.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)-1;
+    Jsecond.block(nv_-nr_,nv_-nr_,nr_,nr_).diagonal().array() = (Scalar)1;     //wrt x1
     Jsecond.bottomRightCorner(nv_, nv_).diagonal().array() = (Scalar)1;
     // std::cout<< "Jacobian both" << std::endl;
     // std::cout<< Jfirst << std::endl;
