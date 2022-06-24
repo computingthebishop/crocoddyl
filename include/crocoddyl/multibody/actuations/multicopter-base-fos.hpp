@@ -98,6 +98,7 @@ class ActuationModelMultiCopterBaseFosTpl : public ActuationModelAbstractTpl<_Sc
   boost::shared_ptr<Data> createData() {
     boost::shared_ptr<Data> data = boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
     //data->dtau_du = tau_f_;
+    data->dtau_du.resize(6,n_rotors_); //required resize as the ActuationDataAbstractTpl initiliases the matrix based on state->nv
     data->dtau_du = MatrixXs::Zero(6,n_rotors_); // derivative wrt controls is 0 as it depends on the state only
     data->dtau_dx.resize(state_->get_nv()-n_rotors_,state_->get_ndx()); //required resize as the ActuationDataAbstractTpl initiliases the matrix based on state->nv
     data->dtau_dx.setZero();
