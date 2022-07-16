@@ -10,6 +10,7 @@ WITHDISPLAY = 'display' in sys.argv or 'CROCODDYL_DISPLAY' in os.environ
 WITHPLOT = 'plot' in sys.argv or 'CROCODDYL_PLOT' in os.environ
 WITHDISPLAY = True
 WITHPLOT = True
+EXPORTCSV = True
 
 hector = example_robot_data.load('hector')
 robot_model = hector.model
@@ -97,9 +98,9 @@ for i in range(T):
     else:
         models_arr.append(runningModel)
 
-problem = crocoddyl.ShootingProblem(initial_state, models_arr, terminalModel)
-solver = crocoddyl.SolverFDDP(problem)
-# solver = crocoddyl.SolverBoxFDDP(problem)
+problem = crocoddyl.ShootingProblem(initial_state, [runningModel]*T, terminalModel)
+# solver = crocoddyl.SolverFDDP(problem)
+solver = crocoddyl.SolverBoxFDDP(problem)
 
 solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 
@@ -117,6 +118,38 @@ else:
 
 # Solving the problem with the FDDP solver
 solver.solve()
+
+if EXPORTCSV:
+    import pandas as pd
+    log = solver.getCallbacks()[0]
+    states_solution = log.xs
+    controls_solution = log.us
+    if states_solution is not None:
+        nx = states_solution[0].shape[0]
+        X = [0.0] * nx
+        for i in range(nx):
+            X[i] = [np.asscalar(x[i]) for x in states_solution]
+    if controls_solution is not None:
+        nu = controls_solution[0].shape[0]
+        U = [0.0] * nu
+        for i in range(nu):
+            U[i] = [np.asscalar(u[i]) if u.shape[0] != 0 else 0 for u in controls_solution]
+    states = {
+        "x": X[0],"y": X[1],"z": X[2],
+        "qx": X[3],"qy": X[4],"qz": X[5],"qw": X[6],
+        "a1": X[7],"b1": X[8],"a2": X[9],"b2": X[10],"a3": X[11],"b3": X[12],"a4": X[13],"b4": X[14],
+        "vx": X[15],"vy": X[16],"vz": X[17],
+        "vrx": X[18],"vry": X[19],"vrz": X[20],
+        "w1": X[21],"w2": X[22],"w3": X[23],"w4": X[24],
+    }
+    controls = {
+        "u1": U[0],"u2": U[1],"u3": U[2],"u4": U[3],
+    }
+
+    df_states = pd.DataFrame(states)
+    df_controls = pd.DataFrame(controls) 
+    df_states.to_csv('quadrotor_states.csv')
+    df_controls.to_csv('quadrotor_controls.csv')
 
 # Plotting the entire motion
 if WITHPLOT:
